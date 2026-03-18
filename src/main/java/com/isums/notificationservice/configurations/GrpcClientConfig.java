@@ -1,6 +1,6 @@
 package com.isums.notificationservice.configurations;
 
-import com.isums.notificationservice.grpc.UserServiceGrpc;
+import com.isums.userservice.grpc.UserServiceGrpc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.grpc.client.GrpcChannelFactory;
