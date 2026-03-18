@@ -13,5 +13,5 @@ import java.util.UUID;
 @Builder
 public class ConfirmAndSendToTenantEvent {
     private String url;
-    private UUID tenantId;
+    private UUID recipientUserId;
 }
