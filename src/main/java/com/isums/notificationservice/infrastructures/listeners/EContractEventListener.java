@@ -2,9 +2,9 @@ package com.isums.notificationservice.infrastructures.listeners;
 
 import com.isums.notificationservice.domains.dtos.ConfirmAndSendToTenantEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
-import com.isums.notificationservice.grpc.UserResponse;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
+import com.isums.userservice.grpc.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -29,10 +29,10 @@ public class EContractEventListener {
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
     public void HandleEContractEventSendToTenant(ConfirmAndSendToTenantEvent event) {
-        UUID tenantId = event.getTenantId();
-        UserResponse user = userGrpcClient.getUserById(tenantId);
+        UUID userId = event.getRecipientUserId();
+        UserResponse user = userGrpcClient.getUserById(userId);
         if (user == null) {
-            log.error("User not found: {}", tenantId);
+            log.error("User not found: {}", userId);
             return;
         }
 
@@ -48,11 +48,11 @@ public class EContractEventListener {
         vars.put("startDate", formatDate(Instant.now()));
         vars.put("endDate", formatDate(Instant.now()));
 
-        // 4) URLs
+        // URLs
         vars.put("viewUrl", safe(event.getUrl(), "#"));
         vars.put("confirmUrl", safe(event.getUrl(), "#"));
 
-        // 5) expiry display
+        // expiry display
         vars.put("expiresIn", safe("24 giờ", "24 giờ"));
         String emailKey = "econtract_view_confirm";
         try {

@@ -1,8 +1,8 @@
 package com.isums.notificationservice.infrastructures.grpcs;
 
-import com.isums.notificationservice.grpc.GetUserRequest;
-import com.isums.notificationservice.grpc.UserResponse;
-import com.isums.notificationservice.grpc.UserServiceGrpc;
+import com.isums.userservice.grpc.GetUserByIdRequest;
+import com.isums.userservice.grpc.UserResponse;
+import com.isums.userservice.grpc.UserServiceGrpc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class UserGrpcClient {
 
     public UserResponse getUserById(UUID userId) {
 
-        GetUserRequest req = GetUserRequest.newBuilder().setUserId(String.valueOf(userId)).build();
+        GetUserByIdRequest req = GetUserByIdRequest.newBuilder().setUserId(String.valueOf(userId)).build();
 
         return userStub.getUserById(req);
     }
