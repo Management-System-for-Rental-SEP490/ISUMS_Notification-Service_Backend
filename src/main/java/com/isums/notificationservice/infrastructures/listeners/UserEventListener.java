@@ -1,6 +1,7 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.isums.notificationservice.domains.dtos.SendEmailEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
@@ -9,16 +10,15 @@ import common.kafkas.KafkaListenerHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class UserEventListener {
+
     private final EmailService emailService;
     private final IdempotencyService idempotencyService;
     private final KafkaListenerHelper kafkaHelper;
@@ -37,16 +37,31 @@ public class UserEventListener {
             }
 
             SendEmailEvent event = objectMapper.readValue(record.value(), SendEmailEvent.class);
-            emailService.sendEmail(event.to(), event.templateCode().toLowerCase(), LocaleType.vi_VN, event.params());
+
+            if (event.to() == null || event.to().isBlank()) {
+                log.error("Invalid event: missing 'to' field. messageId={}", messageId);
+                ack.acknowledge();
+                return;
+            }
+
+            emailService.sendEmail(
+                    event.to(),
+                    event.templateCode().toLowerCase(),
+                    LocaleType.vi_VN,
+                    event.params()
+            );
+
             idempotencyService.markProcessed(messageId);
             ack.acknowledge();
+
+            log.info("email_dispatched messageId={} to={} template={}", messageId, event.to(), event.templateCode());
+
         } catch (JacksonException e) {
-            log.error("Deserialization failed raw={}", record.value(), e);
+            log.error("Deserialization failed messageId={} raw={}: {}", messageId, record.value(), e.getMessage());
             ack.acknowledge();
-            throw new RuntimeException(e);
         } catch (Exception e) {
-            log.error("Processing failed, will retry", e);
-            throw e;
+            log.error("Processing failed messageId={}, will retry: {}", messageId, e.getMessage(), e);
+            throw new RuntimeException(e);
         } finally {
             kafkaHelper.clearMDC();
         }
