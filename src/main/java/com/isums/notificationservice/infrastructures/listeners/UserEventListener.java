@@ -2,7 +2,7 @@ package com.isums.notificationservice.infrastructures.listeners;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
-import com.isums.notificationservice.domains.dtos.SendEmailEvent;
+import com.isums.notificationservice.domains.events.SendEmailEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import common.kafkas.IdempotencyService;

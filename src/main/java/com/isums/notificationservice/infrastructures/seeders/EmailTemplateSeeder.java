@@ -42,21 +42,21 @@ public class EmailTemplateSeeder {
                 LocaleType.vi_VN,
                 "Chao mung {{name}} den voi ISUMS",
                 """
-                <!doctype html>
-                <html>
-                  <body style="font-family:Arial,sans-serif;">
-                    <h2>Chao mung {{name}}!</h2>
-                    <p>Tai khoan cua ban da duoc kich hoat.</p>
-                    <p>Bat dau tai: <a href="{{appUrl}}">{{appUrl}}</a></p>
-                    <p style="color:#888;font-size:12px;">Ho tro: {{supportEmail}}</p>
-                  </body>
-                </html>
-                """,
+                        <!doctype html>
+                        <html>
+                          <body style="font-family:Arial,sans-serif;">
+                            <h2>Chao mung {{name}}!</h2>
+                            <p>Tai khoan cua ban da duoc kich hoat.</p>
+                            <p>Bat dau tai: <a href="{{appUrl}}">{{appUrl}}</a></p>
+                            <p style="color:#888;font-size:12px;">Ho tro: {{supportEmail}}</p>
+                          </body>
+                        </html>
+                        """,
                 """
-                Chao mung {{name}}!
-                Bat dau tai: {{appUrl}}
-                Ho tro: {{supportEmail}}
-                """,
+                        Chao mung {{name}}!
+                        Bat dau tai: {{appUrl}}
+                        Ho tro: {{supportEmail}}
+                        """,
                 List.of("name", "appUrl", "supportEmail"),
                 "system"
         );
@@ -81,13 +81,13 @@ public class EmailTemplateSeeder {
                           <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
                             Bạn có một hợp đồng thuê nhà cần xem và xác nhận.
                           </div>
-        
+                        
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb;padding:24px 12px;">
                             <tr>
                               <td align="center">
                                 <table role="presentation" width="600" cellpadding="0" cellspacing="0"
                                        style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
-        
+                        
                                   <tr>
                                     <td style="padding:20px 24px;background:#0b5cff;color:#ffffff;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1.2;">
@@ -98,18 +98,18 @@ public class EmailTemplateSeeder {
                                       </div>
                                     </td>
                                   </tr>
-        
+                        
                                   <tr>
                                     <td style="padding:24px;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#101828;line-height:1.6;">
                                         Xin chào <strong>{{tenantName}}</strong>,
                                       </div>
-        
+                        
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#344054;line-height:1.7;margin-top:10px;">
                                         Bạn vừa nhận được hợp đồng thuê nhà từ <strong>{{landlordName}}</strong>.
                                         Vui lòng nhấn <strong>Xem hợp đồng</strong> để đọc nội dung và tiến hành xác nhận nếu đồng ý.
                                       </div>
-        
+                        
                                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
                                         <tr>
                                           <td style="padding:14px 16px;background:#f2f4f7;border-radius:12px;">
@@ -122,7 +122,7 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-        
+                        
                                       <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
                                         <tr>
                                           <td>
@@ -142,7 +142,7 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-        
+                        
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:18px;">
                                         Nếu bạn không bấm được nút, hãy copy &amp; paste link sau vào trình duyệt:
                                         <div style="word-break:break-all;margin-top:6px;">
@@ -150,21 +150,21 @@ public class EmailTemplateSeeder {
                                           <strong>Xác nhận:</strong> {{confirmUrl}}
                                         </div>
                                       </div>
-        
+                        
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:14px;">
                                         Vì lý do bảo mật, đường dẫn xác nhận có thể hết hạn sau <strong>{{expiresIn}}</strong>.
                                         Nếu bạn không yêu cầu email này, vui lòng bỏ qua.
                                       </div>
-        
+                        
                                       <hr style="border:none;border-top:1px solid #eaecf0;margin:22px 0;">
-        
+                        
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#98a2b3;line-height:1.6;">
                                         Trân trọng,<br>
                                         Đội ngũ ISUMS
                                       </div>
                                     </td>
                                   </tr>
-        
+                        
                                   <tr>
                                     <td style="padding:16px 24px;background:#fafafa;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#98a2b3;line-height:1.6;">
@@ -172,7 +172,7 @@ public class EmailTemplateSeeder {
                                       </div>
                                     </td>
                                   </tr>
-        
+                        
                                 </table>
                               </td>
                             </tr>
@@ -182,17 +182,17 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Xin chào {{tenantName}}
-        
+                        
                         Bạn vừa nhận được hợp đồng thuê nhà từ {{landlordName}}.
-        
+                        
                         Mã hợp đồng: {{contractNo}}
                         Tên hợp đồng: {{contractName}}
                         Địa chỉ: {{propertyAddress}}
                         Thời hạn: {{startDate}} - {{endDate}}
-        
+                        
                         Xem hợp đồng: {{viewUrl}}
                         Xác nhận đồng ý: {{confirmUrl}}
-        
+                        
                         Lưu ý: Link xác nhận có thể hết hạn sau {{expiresIn}}.
                         """,
                 List.of(
@@ -219,175 +219,433 @@ public class EmailTemplateSeeder {
                 LocaleType.vi_VN,
                 "Tài khoản của bạn đã được kích hoạt",
                 """
+                        <!doctype html>
+                        <html lang="vi">
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width,initial-scale=1">
+                          <title>Tài khoản đã được kích hoạt</title>
+                        </head>
+                        <body style="margin:0;padding:0;background:#f6f7fb;">
+                          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+                            Tài khoản ISUMS của bạn đã sẵn sàng. Đây là thông tin đăng nhập tạm thời.
+                          </div>
+                        
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                 style="background:#f6f7fb;padding:24px 12px;">
+                            <tr>
+                              <td align="center">
+                                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                       style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;
+                                              overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
+                        
+                                  <!-- Header -->
+                                  <tr>
+                                    <td style="padding:20px 24px;background:#101828;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;
+                                                  font-weight:700;color:#ffffff;line-height:1.2;">
+                                        ISUMS
+                                      </div>
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
+                                                  color:#98a2b3;margin-top:4px;">
+                                        Hệ thống quản lý thuê trọ
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                  <!-- Status Badge -->
+                                  <tr>
+                                    <td style="padding:28px 24px 0;">
+                                      <div style="display:inline-block;background:#ecfdf3;border:1px solid #abefc6;
+                                                  border-radius:20px;padding:5px 14px;">
+                                        <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                     font-weight:700;color:#067647;letter-spacing:.5px;">
+                                          ✓ &nbsp;TÀI KHOẢN ĐÃ KÍCH HOẠT
+                                        </span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                  <!-- Body -->
+                                  <tr>
+                                    <td style="padding:16px 24px 24px;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;
+                                                  font-weight:700;color:#101828;line-height:1.3;margin-bottom:10px;">
+                                        Xin chào, {{name}}!
+                                      </div>
+                        
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;
+                                                  color:#475467;line-height:1.75;">
+                                        Tài khoản của bạn trên hệ thống <strong>ISUMS</strong> đã được tạo và kích hoạt thành công.
+                                        Dưới đây là thông tin đăng nhập tạm thời — vui lòng đổi mật khẩu ngay sau lần đăng nhập đầu tiên.
+                                      </div>
+                        
+                                      <!-- Credentials Box -->
+                                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                             style="margin-top:20px;border:1px solid #eaecf0;border-radius:12px;overflow:hidden;">
+                                        <tr>
+                                          <td style="padding:14px 16px;background:#f9fafb;border-bottom:1px solid #eaecf0;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;
+                                                        font-weight:700;color:#98a2b3;letter-spacing:.8px;text-transform:uppercase;">
+                                              Thông tin đăng nhập
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:16px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                              <tr>
+                                                <td style="padding:6px 0;width:120px;">
+                                                  <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#98a2b3;">
+                                                    Email
+                                                  </div>
+                                                </td>
+                                                <td style="padding:6px 0;">
+                                                  <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
+                                                              font-weight:600;color:#101828;">
+                                                    {{email}}
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                              <tr>
+                                                <td colspan="2">
+                                                  <div style="border-top:1px solid #f2f4f7;margin:4px 0;"></div>
+                                                </td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:6px 0;width:120px;">
+                                                  <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#98a2b3;">
+                                                    Mật khẩu tạm
+                                                  </div>
+                                                </td>
+                                                <td style="padding:6px 0;">
+                                                  <div style="display:inline-block;font-family:'Courier New',monospace;
+                                                              font-size:14px;font-weight:700;color:#101828;
+                                                              background:#f2f4f7;border-radius:6px;padding:3px 10px;
+                                                              letter-spacing:1.5px;">
+                                                    {{password}}
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            </table>
+                                          </td>
+                                        </tr>
+                                      </table>
+                        
+                                      <!-- Warning Note -->
+                                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                             style="margin-top:14px;">
+                                        <tr>
+                                          <td style="padding:12px 14px;background:#fffaeb;border:1px solid #fedf89;
+                                                     border-radius:10px;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                        color:#b54708;line-height:1.6;">
+                                              ⚠️ &nbsp;Mật khẩu này chỉ dùng một lần. Vui lòng đổi mật khẩu ngay sau khi đăng nhập để bảo mật tài khoản.
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </table>
+                        
+                                      <hr style="border:none;border-top:1px solid #eaecf0;margin:24px 0 16px;">
+                        
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                  color:#98a2b3;line-height:1.7;">
+                                        Trân trọng,<br>
+                                        <strong style="color:#475467;">Đội ngũ ISUMS</strong>
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                  <!-- Footer -->
+                                  <tr>
+                                    <td style="padding:14px 24px;background:#f9fafb;border-top:1px solid #eaecf0;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;
+                                                  color:#98a2b3;line-height:1.6;">
+                                        Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                """
+                        Xin chào {{name}},
+                        
+                        Tài khoản ISUMS của bạn đã được kích hoạt thành công.
+                        
+                        Thông tin đăng nhập:
+                        - Email    : {{email}}
+                        - Mật khẩu: {{password}}
+                        
+                        Lưu ý: Đây là mật khẩu tạm thời, vui lòng đổi mật khẩu ngay sau khi đăng nhập.
+                        
+                        Trân trọng,
+                        Đội ngũ ISUMS
+                        """,
+                List.of("name", "email", "password"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "payment_invoice",
+                "PAYMENT",
+                "TENANT",
+                LocaleType.vi_VN,
+                "Hóa đơn {{invoiceType}} cần thanh toán trước {{dueDate}}",
+                """
+                        <!doctype html>
+                        <html lang="vi">
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width,initial-scale=1">
+                          <title>Hóa đơn thanh toán</title>
+                        </head>
+                        <body style="margin:0;padding:0;background:#f6f7fb;">
+                          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+                            Bạn có hóa đơn {{invoiceType}} cần thanh toán trước {{dueDate}}.
+                          </div>
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td align="center" style="padding:32px 16px;">
+                                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                       style="background:#fff;border-radius:16px;overflow:hidden;
+                                              box-shadow:0 2px 8px rgba(0,0,0,.08);max-width:600px;width:100%;">
+                        
+                                  <tr>
+                                    <td style="background:#1a56db;padding:28px 32px;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;
+                                                  font-weight:700;color:#fff;">💳 Hóa đơn thanh toán</div>
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
+                                                  color:#bfdbfe;margin-top:6px;">ISUMS — Hệ thống quản lý nhà trọ</div>
+                                    </td>
+                                  </tr>
+                        
+                                  <tr>
+                                    <td style="padding:28px 32px;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;
+                                                  color:#374151;line-height:1.7;">
+                                        Xin chào,<br>
+                                        Bạn có một hóa đơn cần thanh toán. Vui lòng thanh toán trước hạn để tránh phát sinh phí trễ hạn.
+                                      </div>
+                        
+                                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                             style="margin-top:20px;background:#f9fafb;border-radius:12px;overflow:hidden;">
+                                        <tr>
+                                          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                        color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">
+                                              Loại hóa đơn</div>
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;
+                                                        font-weight:700;color:#111827;margin-top:4px;">{{invoiceType}}</div>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                        color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">
+                                              Số tiền</div>
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;
+                                                        font-weight:700;color:#1a56db;margin-top:4px;">{{amount}}</div>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:16px 20px;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                        color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">
+                                              Hạn thanh toán</div>
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;
+                                                        font-weight:700;color:#dc2626;margin-top:4px;">{{dueDate}}</div>
+                                          </td>
+                                        </tr>
+                                      </table>
+                        
+                                      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+                                        <tr>
+                                          <td>
+                                            <a href="{{paymentUrl}}"
+                                               style="display:inline-block;background:#1a56db;color:#fff;
+                                                      text-decoration:none;font-family:Arial,Helvetica,sans-serif;
+                                                      font-size:15px;font-weight:700;padding:14px 28px;
+                                                      border-radius:10px;letter-spacing:.3px;">
+                                              Thanh toán ngay
+                                            </a>
+                                          </td>
+                                        </tr>
+                                      </table>
+                        
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                  color:#6b7280;line-height:1.6;margin-top:18px;">
+                                        Nếu không bấm được nút, hãy copy link sau vào trình duyệt:<br>
+                                        <div style="word-break:break-all;margin-top:4px;color:#1a56db;">{{paymentUrl}}</div>
+                                      </div>
+                        
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                                                  color:#6b7280;line-height:1.6;margin-top:14px;">
+                                        Link thanh toán hợp lệ trong <strong>{{expiresIn}}</strong>.
+                                        Nếu bạn không yêu cầu email này, vui lòng bỏ qua.
+                                      </div>
+                        
+                                      <hr style="border:none;border-top:1px solid #e5e7eb;margin:22px 0;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;">
+                                        Trân trọng,<br>Đội ngũ ISUMS
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                  <tr>
+                                    <td style="padding:14px 32px;background:#f9fafb;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#9ca3af;">
+                                        Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                      </div>
+                                    </td>
+                                  </tr>
+                        
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                // ── TEXT ──────────────────────────────────────────────────────
+                """
+                        Xin chào,
+                        
+                        Bạn có hóa đơn {{invoiceType}} cần thanh toán.
+                        
+                        Số tiền: {{amount}}
+                        Hạn nộp: {{dueDate}}
+                        
+                        Thanh toán tại: {{paymentUrl}}
+                        
+                        Link có hiệu lực trong {{expiresIn}}.
+                        
+                        Trân trọng,
+                        Đội ngũ ISUMS
+                        """,
+                List.of("invoiceType", "amount", "dueDate", "paymentUrl", "expiresIn"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "payment_receipt",
+                "PAYMENT",
+                "TENANT",
+                LocaleType.vi_VN,
+                "Xác nhận thanh toán {{invoiceType}} thành công",
+                """
                 <!doctype html>
                 <html lang="vi">
-                <head>
-                  <meta charset="utf-8">
-                  <meta name="viewport" content="width=device-width,initial-scale=1">
-                  <title>Tài khoản đã được kích hoạt</title>
-                </head>
+                <head><meta charset="utf-8"><title>Xác nhận thanh toán</title></head>
                 <body style="margin:0;padding:0;background:#f6f7fb;">
-                  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-                    Tài khoản ISUMS của bạn đã sẵn sàng. Đây là thông tin đăng nhập tạm thời.
-                  </div>
-        
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                         style="background:#f6f7fb;padding:24px 12px;">
-                    <tr>
-                      <td align="center">
-                        <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-                               style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;
-                                      overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
-        
-                          <!-- Header -->
-                          <tr>
-                            <td style="padding:20px 24px;background:#101828;">
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;
-                                          font-weight:700;color:#ffffff;line-height:1.2;">
-                                ISUMS
-                              </div>
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
-                                          color:#98a2b3;margin-top:4px;">
-                                Hệ thống quản lý thuê trọ
-                              </div>
-                            </td>
-                          </tr>
-        
-                          <!-- Status Badge -->
-                          <tr>
-                            <td style="padding:28px 24px 0;">
-                              <div style="display:inline-block;background:#ecfdf3;border:1px solid #abefc6;
-                                          border-radius:20px;padding:5px 14px;">
-                                <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
-                                             font-weight:700;color:#067647;letter-spacing:.5px;">
-                                  ✓ &nbsp;TÀI KHOẢN ĐÃ KÍCH HOẠT
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-        
-                          <!-- Body -->
-                          <tr>
-                            <td style="padding:16px 24px 24px;">
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;
-                                          font-weight:700;color:#101828;line-height:1.3;margin-bottom:10px;">
-                                Xin chào, {{name}}!
-                              </div>
-        
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;
-                                          color:#475467;line-height:1.75;">
-                                Tài khoản của bạn trên hệ thống <strong>ISUMS</strong> đã được tạo và kích hoạt thành công.
-                                Dưới đây là thông tin đăng nhập tạm thời — vui lòng đổi mật khẩu ngay sau lần đăng nhập đầu tiên.
-                              </div>
-        
-                              <!-- Credentials Box -->
-                              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                     style="margin-top:20px;border:1px solid #eaecf0;border-radius:12px;overflow:hidden;">
-                                <tr>
-                                  <td style="padding:14px 16px;background:#f9fafb;border-bottom:1px solid #eaecf0;">
-                                    <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;
-                                                font-weight:700;color:#98a2b3;letter-spacing:.8px;text-transform:uppercase;">
-                                      Thông tin đăng nhập
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td style="padding:16px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                      <tr>
-                                        <td style="padding:6px 0;width:120px;">
-                                          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#98a2b3;">
-                                            Email
-                                          </div>
-                                        </td>
-                                        <td style="padding:6px 0;">
-                                          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
-                                                      font-weight:600;color:#101828;">
-                                            {{email}}
-                                          </div>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <td colspan="2">
-                                          <div style="border-top:1px solid #f2f4f7;margin:4px 0;"></div>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <td style="padding:6px 0;width:120px;">
-                                          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#98a2b3;">
-                                            Mật khẩu tạm
-                                          </div>
-                                        </td>
-                                        <td style="padding:6px 0;">
-                                          <div style="display:inline-block;font-family:'Courier New',monospace;
-                                                      font-size:14px;font-weight:700;color:#101828;
-                                                      background:#f2f4f7;border-radius:6px;padding:3px 10px;
-                                                      letter-spacing:1.5px;">
-                                            {{password}}
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    </table>
-                                  </td>
-                                </tr>
-                              </table>
-        
-                              <!-- Warning Note -->
-                              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                     style="margin-top:14px;">
-                                <tr>
-                                  <td style="padding:12px 14px;background:#fffaeb;border:1px solid #fedf89;
-                                             border-radius:10px;">
-                                    <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
-                                                color:#b54708;line-height:1.6;">
-                                      ⚠️ &nbsp;Mật khẩu này chỉ dùng một lần. Vui lòng đổi mật khẩu ngay sau khi đăng nhập để bảo mật tài khoản.
-                                    </div>
-                                  </td>
-                                </tr>
-                              </table>
-        
-                              <hr style="border:none;border-top:1px solid #eaecf0;margin:24px 0 16px;">
-        
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
-                                          color:#98a2b3;line-height:1.7;">
-                                Trân trọng,<br>
-                                <strong style="color:#475467;">Đội ngũ ISUMS</strong>
-                              </div>
-                            </td>
-                          </tr>
-        
-                          <!-- Footer -->
-                          <tr>
-                            <td style="padding:14px 24px;background:#f9fafb;border-top:1px solid #eaecf0;">
-                              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;
-                                          color:#98a2b3;line-height:1.6;">
-                                Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
-                              </div>
-                            </td>
-                          </tr>
-        
-                        </table>
-                      </td>
-                    </tr>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                             style="background:#fff;border-radius:16px;overflow:hidden;
+                                    box-shadow:0 2px 8px rgba(0,0,0,.08);max-width:600px;width:100%;">
+         
+                        <tr>
+                          <td style="background:#16a34a;padding:28px 32px;">
+                            <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;color:#fff;">
+                              ✅ Thanh toán thành công
+                            </div>
+                            <div style="font-family:Arial,sans-serif;font-size:13px;color:#bbf7d0;margin-top:6px;">
+                              ISUMS — Hệ thống quản lý nhà trọ
+                            </div>
+                          </td>
+                        </tr>
+         
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.7;">
+                              Xin chào <strong>{{tenantName}}</strong>,<br>
+                              Hệ thống đã ghi nhận thanh toán của bạn.
+                            </div>
+         
+                            <table role="presentation" width="100%" style="margin-top:20px;border-radius:12px;
+                                    overflow:hidden;background:#f9fafb;">
+                              <tr>
+                                <td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                  <div style="font-size:12px;color:#6b7280;font-family:Arial,sans-serif;">Loại thanh toán</div>
+                                  <div style="font-size:16px;font-weight:700;color:#111827;font-family:Arial,sans-serif;margin-top:4px;">
+                                    {{invoiceType}}
+                                  </div>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                  <div style="font-size:12px;color:#6b7280;font-family:Arial,sans-serif;">Số tiền</div>
+                                  <div style="font-size:22px;font-weight:700;color:#16a34a;font-family:Arial,sans-serif;margin-top:4px;">
+                                    {{amount}}
+                                  </div>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                  <div style="font-size:12px;color:#6b7280;font-family:Arial,sans-serif;">Mã giao dịch</div>
+                                  <div style="font-size:14px;font-weight:600;color:#374151;font-family:Arial,sans-serif;margin-top:4px;">
+                                    {{txnNo}}
+                                  </div>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:14px 20px;">
+                                  <div style="font-size:12px;color:#6b7280;font-family:Arial,sans-serif;">Thời gian</div>
+                                  <div style="font-size:14px;font-weight:600;color:#374151;font-family:Arial,sans-serif;margin-top:4px;">
+                                    {{paidAt}}
+                                  </div>
+                                </td>
+                              </tr>
+                            </table>
+         
+                            <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b7280;margin-top:20px;line-height:1.6;">
+                              Vui lòng lưu lại email này như biên nhận thanh toán.
+                              Nếu có thắc mắc, liên hệ chủ nhà hoặc hỗ trợ ISUMS.
+                            </div>
+         
+                            <hr style="border:none;border-top:1px solid #e5e7eb;margin:22px 0;">
+                            <div style="font-family:Arial,sans-serif;font-size:12px;color:#9ca3af;">
+                              Trân trọng,<br>Đội ngũ ISUMS
+                            </div>
+                          </td>
+                        </tr>
+         
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+         
+                      </table>
+                    </td></tr>
                   </table>
                 </body>
                 </html>
                 """,
                 """
-                Xin chào {{name}},
-        
-                Tài khoản ISUMS của bạn đã được kích hoạt thành công.
-        
-                Thông tin đăng nhập:
-                - Email    : {{email}}
-                - Mật khẩu: {{password}}
-        
-                Lưu ý: Đây là mật khẩu tạm thời, vui lòng đổi mật khẩu ngay sau khi đăng nhập.
-        
+                Xin chào {{tenantName}},
+         
+                Hệ thống đã ghi nhận thanh toán:
+                - Loại: {{invoiceType}}
+                - Số tiền: {{amount}}
+                - Mã GD: {{txnNo}}
+                - Thời gian: {{paidAt}}
+         
+                Vui lòng lưu lại email này như biên nhận.
+         
                 Trân trọng,
                 Đội ngũ ISUMS
                 """,
-                List.of("name", "email", "password"),
+                List.of("tenantName", "invoiceType", "amount", "txnNo", "paidAt"),
                 "system"
         );
 
