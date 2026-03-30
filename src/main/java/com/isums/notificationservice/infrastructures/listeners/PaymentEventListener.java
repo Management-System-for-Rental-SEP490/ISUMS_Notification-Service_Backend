@@ -24,18 +24,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Lắng nghe event thanh toán thành công → gửi email receipt.
- * Topic: payment-paid-topic
- *
- * Khi DEPOSIT:
- *   - Gửi email receipt "Xác nhận thanh toán tiền cọc"
- *
- * Khi MONTHLY_RENT:
- *   - Gửi email receipt "Xác nhận thanh toán tiền thuê"
- *
- * Kích hoạt tài khoản được xử lý riêng tại user-service listener.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -72,7 +60,6 @@ public class PaymentEventListener {
                 return;
             }
 
-            // Build vars cho template PAYMENT_RECEIPT
             Map<String, Object> vars = new HashMap<>();
             vars.put("tenantName",   safe(user.getName(), "bạn"));
             vars.put("invoiceType",  translateType(event.invoiceType()));
