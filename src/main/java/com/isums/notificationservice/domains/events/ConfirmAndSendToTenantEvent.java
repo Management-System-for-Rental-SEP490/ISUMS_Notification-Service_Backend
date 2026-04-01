@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -12,6 +13,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ConfirmAndSendToTenantEvent {
+    private String messageId;
+    private UUID recipientUserId;
+    private UUID contractId;
+    private String contractName;
     private String url;
-    private UUID tenantId;
+    private String confirmUrl;
+    private Instant startDate;
+    private Instant endDate;
 }

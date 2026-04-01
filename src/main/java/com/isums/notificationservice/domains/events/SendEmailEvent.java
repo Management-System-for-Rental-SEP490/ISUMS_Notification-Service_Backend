@@ -1,4 +1,4 @@
-package com.isums.notificationservice.domains.dtos;
+package com.isums.notificationservice.domains.events;
 
 import lombok.Builder;
 
