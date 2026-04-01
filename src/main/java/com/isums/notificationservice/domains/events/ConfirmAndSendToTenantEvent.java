@@ -13,6 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ConfirmAndSendToTenantEvent {
+    private String messageId;
     private UUID recipientUserId;
     private UUID contractId;
     private String contractName;

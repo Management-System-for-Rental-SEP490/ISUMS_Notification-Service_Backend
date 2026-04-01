@@ -39,7 +39,9 @@ public class EContractEventListener {
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
     public void handleConfirmAndSendToTenant(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
+
+        ConfirmAndSendToTenantEvent event = objectMapper.readValue(record.value(), ConfirmAndSendToTenantEvent.class);
+        String messageId = event.getMessageId();
         kafkaHelper.setupMDC(record, messageId);
 
         try {
@@ -48,9 +50,6 @@ public class EContractEventListener {
                 ack.acknowledge();
                 return;
             }
-
-            ConfirmAndSendToTenantEvent event =
-                    objectMapper.readValue(record.value(), ConfirmAndSendToTenantEvent.class);
 
             if (event.getRecipientUserId() == null) {
                 log.error("[EContract] recipientUserId null, skip. contractId={}", event.getContractId());
@@ -72,16 +71,16 @@ public class EContractEventListener {
             }
 
             Map<String, Object> vars = new HashMap<>();
-            vars.put("tenantName",      safe(user.getName(), "bạn"));
-            vars.put("contractName",    safe(event.getContractName(), "Hợp đồng thuê nhà"));
-            vars.put("contractNo",      shortId(event.getContractId()));
+            vars.put("tenantName", safe(user.getName(), "bạn"));
+            vars.put("contractName", safe(event.getContractName(), "Hợp đồng thuê nhà"));
+            vars.put("contractNo", shortId(event.getContractId()));
             vars.put("propertyAddress", "N/A");
-            vars.put("startDate",       formatDate(event.getStartDate()));
-            vars.put("endDate",         formatDate(event.getEndDate()));
-            vars.put("viewUrl",         event.getUrl());
-            vars.put("confirmUrl",      safe(event.getConfirmUrl(), event.getUrl()));
-            vars.put("expiresIn",       "24 giờ");
-            vars.put("landlordName",    "Chủ nhà");
+            vars.put("startDate", formatDate(event.getStartDate()));
+            vars.put("endDate", formatDate(event.getEndDate()));
+            vars.put("viewUrl", event.getUrl());
+            vars.put("confirmUrl", safe(event.getConfirmUrl(), event.getUrl()));
+            vars.put("expiresIn", "24 giờ");
+            vars.put("landlordName", "Chủ nhà");
 
             emailService.sendEmail(user.getEmail(), "econtract_view_confirm", LocaleType.vi_VN, vars);
 
