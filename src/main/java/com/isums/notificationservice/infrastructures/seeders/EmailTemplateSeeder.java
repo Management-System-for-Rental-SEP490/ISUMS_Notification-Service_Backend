@@ -827,6 +827,84 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_completed", "CONTRACT", "TENANT", LocaleType.vi_VN,
+                "Hợp đồng đã ký thành công — Tải về tại đây",
+                """
+                <!doctype html>
+                <html lang="vi">
+                <head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f0f4f8;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:36px 16px;">
+                      <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                             style="background:#fff;border-radius:20px;overflow:hidden;
+                                    box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%;">
+                        <tr>
+                          <td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);padding:36px 40px;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                                        color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+                              ISUMS · Quản lý nhà trọ
+                            </div>
+                            <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;">
+                              Hợp đồng đã hoàn tất ✅
+                            </div>
+                            <div style="font-family:Arial,sans-serif;font-size:14px;color:#bfdbfe;margin-top:8px;">
+                              Cả hai bên đã ký điện tử thành công
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:36px 40px;">
+                            <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.8;">
+                              Hợp đồng mã <strong style="color:#1e40af;">{{contractId}}</strong>
+                              đã được ký bởi tất cả các bên và có hiệu lực pháp lý.<br>
+                              Bạn có thể tải về bản gốc có chữ ký số tại đây:
+                            </div>
+                            <div style="margin-top:28px;text-align:center;">
+                              <a href="{{signedPdfUrl}}"
+                                 style="display:inline-block;background:#1e40af;color:#fff;
+                                        font-family:Arial,sans-serif;font-size:15px;font-weight:700;
+                                        text-decoration:none;padding:16px 40px;border-radius:10px;">
+                                📄 Tải hợp đồng có chữ ký số
+                              </a>
+                            </div>
+                            <div style="margin-top:24px;padding:16px 20px;background:#f0fdf4;
+                                        border-radius:10px;border-left:3px solid #22c55e;">
+                              <div style="font-family:Arial,sans-serif;font-size:13px;color:#166534;line-height:1.7;">
+                                ✅ Hợp đồng này có giá trị pháp lý tương đương bản giấy theo quy định.<br>
+                                📎 Link tải sẽ hết hạn sau 7 ngày. Vui lòng lưu lại file PDF.
+                              </div>
+                            </div>
+                            <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
+                            <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;">
+                              Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:16px 40px;background:#f9fafb;border-top:1px solid #f3f4f6;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Hợp đồng {{contractId}} đã được ký hoàn tất.
+                Tải về tại: {{signedPdfUrl}}
+                Link hết hạn sau 7 ngày.
+                """,
+                List.of("contractId", "signedPdfUrl"),
+                "system"
+        );
+
     }
 
     private void upsertActiveV1(

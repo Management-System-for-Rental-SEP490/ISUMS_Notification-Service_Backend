@@ -61,11 +61,11 @@ public class PaymentEventListener {
             }
 
             Map<String, Object> vars = new HashMap<>();
-            vars.put("tenantName",   safe(user.getName(), "bạn"));
-            vars.put("invoiceType",  translateType(event.invoiceType()));
-            vars.put("amount",       formatVnd(event.amount()));
-            vars.put("txnNo",        event.txnNo());
-            vars.put("paidAt",       event.paidAt() != null ? DMY.format(event.paidAt()) : "N/A");
+            vars.put("tenantName", safe(user.getName(), "bạn"));
+            vars.put("invoiceType", translateType(event.invoiceType()));
+            vars.put("amount", formatVnd(event.amount()));
+            vars.put("txnNo", event.txnNo());
+            vars.put("paidAt", event.paidAt() != null ? DMY.format(event.paidAt()) : "N/A");
 
             emailService.sendEmail(user.getEmail(), "payment_receipt", LocaleType.vi_VN, vars);
 
@@ -89,12 +89,12 @@ public class PaymentEventListener {
 
     private String translateType(String type) {
         return switch (type) {
-            case "DEPOSIT"      -> "Tiền cọc";
+            case "DEPOSIT" -> "Tiền cọc";
             case "MONTHLY_RENT" -> "Tiền thuê tháng";
-            case "MAINTENANCE"  -> "Phí sửa chữa";
-            case "UTILITY"      -> "Phí tiện ích";
-            case "PENALTY"      -> "Tiền phạt";
-            default             -> "Hóa đơn";
+            case "MAINTENANCE" -> "Phí sửa chữa";
+            case "UTILITY" -> "Phí tiện ích";
+            case "PENALTY" -> "Tiền phạt";
+            default -> "Hóa đơn";
         };
     }
 
