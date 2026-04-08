@@ -1104,6 +1104,242 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
+        // ── CONTRACT RENEWAL REMINDER (tenant) ────────────────────────────
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_renewal_reminder", "CONTRACT", "TENANT",
+                LocaleType.vi_VN,
+                "Hợp đồng của bạn còn {{daysRemaining}} ngày — Bạn có muốn gia hạn?",
+                """
+                <!doctype html>
+                <html lang="vi">
+                <head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f3f4f6;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                    box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                        <tr>
+                          <td style="padding:28px 32px;background:#d97706;">
+                            <div style="font-family:Arial,sans-serif;font-size:20px;
+                                        font-weight:700;color:#ffffff;">
+                              ⏰ Hợp đồng sắp hết hạn
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Kính gửi <strong>{{tenantName}}</strong>,
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Hợp đồng thuê nhà <strong>#{{contractId}}</strong> của bạn
+                              {{#openForNew}}
+                                đã hết hạn hôm nay. Phòng đã được mở cho khách mới đặt cọc.
+                              {{/openForNew}}
+                              {{^openForNew}}
+                                còn <strong>{{daysRemaining}} ngày</strong> nữa sẽ hết hạn vào
+                                <strong>{{endDate}}</strong>.
+                              {{/openForNew}}
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                              Nếu bạn muốn tiếp tục thuê, vui lòng liên hệ quản lý hoặc
+                              bấm nút <strong>Gia hạn</strong> trong ứng dụng ISUMS.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Kính gửi {{tenantName}},
+            
+                Hợp đồng #{{contractId}} của bạn còn {{daysRemaining}} ngày (hết hạn {{endDate}}).
+            
+                Nếu muốn gia hạn, vui lòng liên hệ quản lý hoặc bấm Gia hạn trong app ISUMS.
+                """,
+                List.of("tenantName", "contractId", "daysRemaining", "endDate", "openForNew"),
+                "system"
+        );
+
+// ── RENEWAL REQUEST RECEIVED (manager) ────────────────────────────
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "renewal_request_received", "CONTRACT", "MANAGER",
+                LocaleType.vi_VN,
+                "Khách {{tenantName}} muốn gia hạn hợp đồng #{{contractId}}",
+                """
+                <!doctype html>
+                <html lang="vi">
+                <head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f3f4f6;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                    box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                        <tr>
+                          <td style="padding:28px 32px;background:#1d4ed8;">
+                            <div style="font-family:Arial,sans-serif;font-size:20px;
+                                        font-weight:700;color:#ffffff;">
+                              🔔 Yêu cầu gia hạn hợp đồng
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Kính gửi <strong>{{managerName}}</strong>,
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Khách <strong>{{tenantName}}</strong> vừa gửi yêu cầu gia hạn
+                              hợp đồng <strong>#{{contractId}}</strong>.
+                            </p>
+                            <table width="100%" style="border:1px solid #e5e7eb;
+                                   border-radius:8px;border-collapse:collapse;margin:20px 0;">
+                              <tr style="background:#f9fafb;">
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;width:40%;">
+                                  Tình trạng cạnh tranh
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;font-weight:600;color:#dc2626;">
+                                  {{hasCompetingDeposit}}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;
+                                           border-top:1px solid #e5e7eb;">
+                                  Ghi chú của khách
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#374151;
+                                           border-top:1px solid #e5e7eb;">
+                                  {{note}}
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                              Vui lòng đăng nhập hệ thống để liên hệ khách và soạn hợp đồng mới nếu đồng ý.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Kính gửi {{managerName}},
+            
+                Khách {{tenantName}} vừa gửi yêu cầu gia hạn hợp đồng #{{contractId}}.
+            
+                Tình trạng cạnh tranh: {{hasCompetingDeposit}}
+                Ghi chú: {{note}}
+            
+                Vui lòng đăng nhập hệ thống để xử lý.
+                """,
+                List.of("managerName", "tenantName", "contractId", "hasCompetingDeposit", "note"),
+                "system"
+        );
+
+// ── RENEWAL DECLINED (tenant) ──────────────────────────────────────
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "renewal_declined", "CONTRACT", "TENANT",
+                LocaleType.vi_VN,
+                "Yêu cầu gia hạn hợp đồng #{{contractId}} không được chấp thuận",
+                """
+                <!doctype html>
+                <html lang="vi">
+                <head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f3f4f6;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                    box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                        <tr>
+                          <td style="padding:28px 32px;background:#991b1b;">
+                            <div style="font-family:Arial,sans-serif;font-size:20px;
+                                        font-weight:700;color:#ffffff;">
+                              ❌ Yêu cầu gia hạn không được chấp thuận
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Kính gửi <strong>{{tenantName}}</strong>,
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Rất tiếc, yêu cầu gia hạn hợp đồng <strong>#{{contractId}}</strong>
+                              của bạn không được chấp thuận.
+                            </p>
+                            <table width="100%" style="border:1px solid #e5e7eb;
+                                   border-radius:8px;border-collapse:collapse;margin:20px 0;">
+                              <tr style="background:#f9fafb;">
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;width:40%;">
+                                  Lý do
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#374151;">
+                                  {{reason}}
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                              Nếu có thắc mắc, vui lòng liên hệ quản lý để được hỗ trợ.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Kính gửi {{tenantName}},
+            
+                Yêu cầu gia hạn hợp đồng #{{contractId}} của bạn không được chấp thuận.
+            
+                Lý do: {{reason}}
+            
+                Nếu có thắc mắc, vui lòng liên hệ quản lý.
+                """,
+                List.of("tenantName", "contractId", "reason"),
+                "system"
+        );
+
     }
 
     private void upsertActiveV1(
