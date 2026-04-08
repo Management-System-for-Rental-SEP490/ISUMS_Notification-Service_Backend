@@ -905,6 +905,205 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
+
+        // ── INSPECTION DONE REVIEW (manager) ──────────────────────────────
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "inspection_done_review", "CONTRACT", "MANAGER",
+                LocaleType.vi_VN,
+                "Kiểm tra nhà hoàn tất — Hợp đồng #{{contractId}}",
+                """
+                <!doctype html>
+                <html>
+                <body style="margin:0;padding:0;background:#f3f4f6;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                    box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                        <tr>
+                          <td style="padding:28px 32px;background:#1d4ed8;">
+                            <div style="font-family:Arial,sans-serif;font-size:20px;
+                                        font-weight:700;color:#ffffff;">
+                              ✅ Kiểm tra nhà hoàn tất
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Kính gửi <strong>{{managerName}}</strong>,
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Nhân viên đã hoàn thành kiểm tra nhà cho hợp đồng
+                              <strong>#{{contractId}}</strong>.
+                            </p>
+                            <table width="100%" style="border:1px solid #e5e7eb;
+                                   border-radius:8px;border-collapse:collapse;margin:20px 0;">
+                              <tr style="background:#f9fafb;">
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;width:40%;">
+                                  Mã kiểm tra
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;font-weight:600;color:#111827;">
+                                  {{inspectionId}}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;
+                                           border-top:1px solid #e5e7eb;">
+                                  Số tiền khấu trừ đề xuất
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;font-weight:600;color:#dc2626;
+                                           border-top:1px solid #e5e7eb;">
+                                  {{deductionAmount}}
+                                </td>
+                              </tr>
+                              <tr style="background:#f9fafb;">
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;
+                                           border-top:1px solid #e5e7eb;">
+                                  Ghi chú
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#374151;
+                                           border-top:1px solid #e5e7eb;">
+                                  {{notes}}
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                              Vui lòng đăng nhập hệ thống để xem chi tiết và xác nhận
+                              số tiền hoàn cọc cho khách.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Kính gửi {{managerName}},
+                
+                Nhân viên đã hoàn thành kiểm tra nhà cho hợp đồng #{{contractId}}.
+                
+                Mã kiểm tra: {{inspectionId}}
+                Số tiền khấu trừ đề xuất: {{deductionAmount}}
+                Ghi chú: {{notes}}
+                
+                Vui lòng đăng nhập hệ thống để xác nhận hoàn cọc.
+                """,
+                List.of("managerName", "contractId", "inspectionId",
+                        "houseId", "deductionAmount", "notes"),
+                "system"
+        );
+
+// ── CONTRACT EXPIRED INSPECTION SCHEDULED (manager) ───────────────
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_expired_inspection_scheduled", "CONTRACT", "MANAGER",
+                LocaleType.vi_VN,
+                "Hợp đồng #{{contractId}} đã hết hạn — Đã lên lịch kiểm tra nhà",
+                """
+                <!doctype html>
+                <html>
+                <body style="margin:0;padding:0;background:#f3f4f6;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:32px 16px;">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                    box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                        <tr>
+                          <td style="padding:28px 32px;background:#92400e;">
+                            <div style="font-family:Arial,sans-serif;font-size:20px;
+                                        font-weight:700;color:#ffffff;">
+                              🔔 Hợp đồng hết hạn — Đã phân công kiểm tra nhà
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:28px 32px;">
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Kính gửi <strong>{{managerName}}</strong>,
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Hợp đồng <strong>#{{contractId}}</strong> của khách
+                              <strong>{{tenantName}}</strong> đã hết hạn.
+                            </p>
+                            <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                              Hệ thống đã tự động tạo lịch kiểm tra nhà và phân công
+                              nhân viên phụ trách.
+                            </p>
+                            <table width="100%" style="border:1px solid #e5e7eb;
+                                   border-radius:8px;border-collapse:collapse;margin:20px 0;">
+                              <tr style="background:#f9fafb;">
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;width:40%;">
+                                  Mã kiểm tra
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;font-weight:600;color:#111827;">
+                                  {{inspectionId}}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#6b7280;
+                                           border-top:1px solid #e5e7eb;">
+                                  Khách thuê
+                                </td>
+                                <td style="padding:10px 16px;font-family:Arial,sans-serif;
+                                           font-size:13px;color:#374151;
+                                           border-top:1px solid #e5e7eb;">
+                                  {{tenantName}}
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                              Vui lòng theo dõi tiến trình kiểm tra trên hệ thống.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:14px 32px;background:#f9fafb;">
+                            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                              Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                """
+                Kính gửi {{managerName}},
+                
+                Hợp đồng #{{contractId}} của khách {{tenantName}} đã hết hạn.
+                
+                Mã kiểm tra: {{inspectionId}}
+                
+                Hệ thống đã tự động phân công nhân viên kiểm tra nhà.
+                Vui lòng theo dõi tiến trình trên hệ thống.
+                """,
+                List.of("managerName", "contractId", "tenantName",
+                        "houseId", "inspectionId"),
+                "system"
+        );
+
     }
 
     private void upsertActiveV1(
