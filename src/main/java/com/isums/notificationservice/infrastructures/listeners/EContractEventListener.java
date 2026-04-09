@@ -1,5 +1,6 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
+import com.isums.notificationservice.domains.events.RenewalReminderEvent;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import com.isums.notificationservice.domains.events.ConfirmAndSendToTenantEvent;
@@ -100,6 +101,46 @@ public class EContractEventListener {
             throw new RuntimeException(e);
         } finally {
             kafkaHelper.clearMDC();
+        }
+    }
+
+    @KafkaListener(topics = "contract.renewal.reminder", groupId = "notification-group")
+    public void handleRenewalReminder(
+            ConsumerRecord<String, String> record, Acknowledgment ack) {
+
+        String messageId = kafkaHelper.extractMessageId(record);
+        try {
+            if (idempotencyService.isDuplicate(messageId)) {
+                ack.acknowledge();
+                return;
+            }
+
+            RenewalReminderEvent event = objectMapper.readValue(record.value(), RenewalReminderEvent.class);
+
+            UserResponse tenant = userGrpcClient.getUserById(event.getTenantId());
+
+            emailService.sendEmail(
+                    tenant.getEmail(),
+                    "contract_renewal_reminder",
+                    LocaleType.vi_VN,
+                    Map.of(
+                            "tenantName", tenant.getName(),
+                            "contractId", event.getContractId().toString()
+                                    .substring(0, 8).toUpperCase(),
+                            "daysRemaining", String.valueOf(event.getDaysRemaining()),
+                            "endDate", DMY.format(event.getEndDate()),
+                            "openForNew", event.getDaysRemaining() == 0
+                    )
+            );
+
+            idempotencyService.markProcessed(messageId);
+            ack.acknowledge();
+            log.info("[Notification] RenewalReminder sent tenantId={} daysRemaining={}",
+                    event.getTenantId(), event.getDaysRemaining());
+
+        } catch (Exception e) {
+            log.error("[Notification] handleRenewalReminder failed: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 
