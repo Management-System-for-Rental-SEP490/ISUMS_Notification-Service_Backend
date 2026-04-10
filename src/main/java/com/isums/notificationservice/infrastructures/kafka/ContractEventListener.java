@@ -19,7 +19,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ContractNotificationConsumer {
+public class ContractEventListener {
 
     private final ManagerNotificationService notificationService;
     private final ObjectMapper objectMapper;
