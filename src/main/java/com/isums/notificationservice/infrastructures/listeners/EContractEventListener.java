@@ -40,12 +40,14 @@ public class EContractEventListener {
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
     public void handleConfirmAndSendToTenant(ConsumerRecord<String, String> record, Acknowledgment ack) {
-
-        ConfirmAndSendToTenantEvent event = objectMapper.readValue(record.value(), ConfirmAndSendToTenantEvent.class);
-        String messageId = event.getMessageId();
+        String messageId = kafkaHelper.extractMessageId(record);
         kafkaHelper.setupMDC(record, messageId);
 
         try {
+            ConfirmAndSendToTenantEvent event = objectMapper.readValue(
+                    record.value(), ConfirmAndSendToTenantEvent.class);
+            if (event.getMessageId() != null) messageId = event.getMessageId();
+
             if (idempotencyService.isDuplicate(messageId)) {
                 log.warn("[EContract] Duplicate skipped messageId={}", messageId);
                 ack.acknowledge();

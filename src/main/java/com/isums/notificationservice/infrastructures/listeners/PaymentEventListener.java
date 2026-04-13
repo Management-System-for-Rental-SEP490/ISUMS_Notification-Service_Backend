@@ -100,7 +100,7 @@ public class PaymentEventListener {
 
     private String formatVnd(Long amount) {
         if (amount == null) return "0 ₫";
-        return NumberFormat.getNumberInstance(new Locale("vi", "VN")).format(amount) + " ₫";
+        return NumberFormat.getNumberInstance(Locale.of("vi", "VN")).format(amount) + " ₫";
     }
 
     private String safe(String s, String fb) {
