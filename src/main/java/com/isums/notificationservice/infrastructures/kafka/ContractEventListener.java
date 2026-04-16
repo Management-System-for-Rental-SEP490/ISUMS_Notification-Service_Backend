@@ -1,6 +1,7 @@
 package com.isums.notificationservice.infrastructures.kafka;
 
 import com.isums.notificationservice.domains.enums.NotificationCategory;
+import com.isums.notificationservice.domains.events.ContractReadyForLandlordSignatureEvent;
 import com.isums.notificationservice.domains.events.InspectionDoneNotifyEvent;
 import com.isums.notificationservice.domains.events.InspectionScheduledEvent;
 import com.isums.notificationservice.infrastructures.abstracts.ManagerNotificationService;
@@ -25,6 +26,43 @@ public class ContractEventListener {
     private final ObjectMapper objectMapper;
     private final IdempotencyService idempotencyService;
     private final KafkaListenerHelper kafkaHelper;
+
+    @KafkaListener(topics = "contract.ready-for-landlord-signature",
+            groupId = "notification-group")
+    public void handleReadyForLandlordSignature(
+            ConsumerRecord<String, String> record, Acknowledgment ack) {
+
+        String messageId = kafkaHelper.extractMessageId(record);
+        try {
+            ContractReadyForLandlordSignatureEvent event = objectMapper.readValue(
+                    record.value(), ContractReadyForLandlordSignatureEvent.class);
+            if (event.getMessageId() != null) messageId = event.getMessageId();
+
+            if (idempotencyService.isDuplicate(messageId)) {
+                ack.acknowledge();
+                return;
+            }
+
+            notificationService.send(
+                    event.getRecipientId(),
+                    NotificationCategory.CONTRACT_READY_FOR_LANDLORD_SIGNATURE,
+                    "Khách đã xác nhận CCCD - Chờ chủ nhà ký",
+                    "Khách " + safe(event.getTenantName(), "người thuê")
+                            + " đã xác nhận CCCD cho hợp đồng #"
+                            + shortId(event.getContractId())
+                            + ". Vào hệ thống để ký tiếp.",
+                    "/contracts/" + event.getContractId(),
+                    Map.of("contractId", event.getContractId().toString())
+            );
+
+            idempotencyService.markProcessed(messageId);
+            ack.acknowledge();
+            log.info("[Notification] handleReadyForLandlordSignature done messageId={}", messageId);
+        } catch (Exception e) {
+            log.error("[Notification] handleReadyForLandlordSignature failed: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
 
     // Hợp đồng hết hạn → phân công nhân viên kiểm tra
     @KafkaListener(topics = "contract.inspection.scheduled",
@@ -99,5 +137,13 @@ public class ContractEventListener {
             log.error("[Notification] handleInspectionDone failed: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    private String safe(String value, String fallback) {
+        return value != null && !value.isBlank() ? value.trim() : fallback;
+    }
+
+    private String shortId(java.util.UUID id) {
+        return id != null ? id.toString().substring(0, 8).toUpperCase() : "N/A";
     }
 }

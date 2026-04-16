@@ -1,6 +1,7 @@
 package com.isums.notificationservice.infrastructures.kafka;
 
 import com.isums.notificationservice.domains.enums.NotificationCategory;
+import com.isums.notificationservice.domains.events.ContractReadyForLandlordSignatureEvent;
 import com.isums.notificationservice.domains.events.InspectionDoneNotifyEvent;
 import com.isums.notificationservice.domains.events.InspectionScheduledEvent;
 import com.isums.notificationservice.infrastructures.abstracts.ManagerNotificationService;
@@ -42,6 +43,46 @@ class ContractEventListenerTest {
     @Mock private Acknowledgment ack;
 
     @InjectMocks private ContractEventListener listener;
+
+    @Nested
+    @DisplayName("handleReadyForLandlordSignature")
+    class ReadyForLandlordSignature {
+
+        private final ConsumerRecord<String, String> rec =
+                new ConsumerRecord<>("contract.ready-for-landlord-signature", 0, 0L, "k", "v");
+
+        @Test
+        @DisplayName("sends CONTRACT_READY_FOR_LANDLORD_SIGNATURE notification on happy path")
+        void happy() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            ContractReadyForLandlordSignatureEvent event = new ContractReadyForLandlordSignatureEvent(
+                    UUID.randomUUID(), UUID.randomUUID(), "Alice", "Hop dong thue", "m1");
+            when(objectMapper.readValue("v", ContractReadyForLandlordSignatureEvent.class)).thenReturn(event);
+
+            listener.handleReadyForLandlordSignature(rec, ack);
+
+            verify(notificationService).send(eq(event.getRecipientId()),
+                    eq(NotificationCategory.CONTRACT_READY_FOR_LANDLORD_SIGNATURE),
+                    anyString(), anyString(), anyString(), any(Map.class));
+            verify(ack).acknowledge();
+        }
+
+        @Test
+        @DisplayName("skips-and-acks when duplicate")
+        void duplicate() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            ContractReadyForLandlordSignatureEvent event = new ContractReadyForLandlordSignatureEvent(
+                    UUID.randomUUID(), UUID.randomUUID(), "Alice", "Hop dong thue", "m1");
+            when(objectMapper.readValue("v", ContractReadyForLandlordSignatureEvent.class)).thenReturn(event);
+            when(idempotencyService.isDuplicate("m1")).thenReturn(true);
+
+            listener.handleReadyForLandlordSignature(rec, ack);
+
+            verify(ack).acknowledge();
+            verifyNoInteractions(notificationService);
+        }
+    }
 
     @Nested
     @DisplayName("handleInspectionScheduled")

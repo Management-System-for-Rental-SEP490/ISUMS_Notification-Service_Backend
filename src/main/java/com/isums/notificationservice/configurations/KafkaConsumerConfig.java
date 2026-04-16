@@ -3,10 +3,12 @@ package com.isums.notificationservice.configurations;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
@@ -18,8 +20,26 @@ import java.util.Map;
 @Configuration
 public class KafkaConsumerConfig {
 
+    public static final String READY_FOR_LANDLORD_SIGNATURE_TOPIC = "contract.ready-for-landlord-signature";
+
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
+
+    @Bean
+    public NewTopic readyForLandlordSignatureTopic() {
+        return TopicBuilder.name(READY_FOR_LANDLORD_SIGNATURE_TOPIC)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic readyForLandlordSignatureDltTopic() {
+        return TopicBuilder.name(READY_FOR_LANDLORD_SIGNATURE_TOPIC + ".DLT")
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
 
     @Bean
     public KafkaTemplate<String, byte[]> dltKafkaTemplate() {
