@@ -3,17 +3,19 @@ name: Deploy
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
-  packages: write
+  packages: read
 
 jobs:
   deploy:
     uses: Management-System-for-Rental-SEP490/.github/.github/workflows/deploy-java-service.yml@main
     with:
       service_name: notification-service
-      xmx: 512m
+      xmx: 384m
+      ecr_keep_tagged: 8
     secrets:
       GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
