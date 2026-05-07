@@ -87,11 +87,16 @@ public class UserEventListener {
             Map<String, Object> params = new HashMap<>();
             params.put("name", event.name());
             params.put("email", event.email());
-            params.put("password", event.tempPassword());
+
+            params.put("password", event.password() != null ? event.password() : "");
             params.put("hasInvoice", event.firstRentPaymentUrl() != null);
 
             if (event.firstRentPaymentUrl() != null) {
                 params.put("invoiceType", "Tiền thuê tháng đầu");
+                params.put("invoiceTypeVi", "Tiền thuê tháng đầu");
+                params.put("invoiceTypeEn", "First-month rent");
+                params.put("invoiceTypeJa", "初月家賃");
+                params.put("invoiceTypeCode", "MONTHLY_RENT");
                 params.put("invoiceAmount", formatVnd(event.firstRentAmount()));
                 params.put("invoiceDueDate", DMY.format(event.firstRentDueDate()));
                 params.put("invoicePaymentUrl", event.firstRentPaymentUrl());

@@ -21,4 +21,9 @@ public class ConfirmAndSendToTenantEvent {
     private String confirmUrl;
     private Instant startDate;
     private Instant endDate;
+
+    // Contract language code emitted by econtract-service so Notification
+    // picks the right email template. Expected values: "VI", "VI_EN", "VI_JA".
+    // Null = legacy event (pre BE-3) → fall back to VI.
+    private String contractLanguage;
 }

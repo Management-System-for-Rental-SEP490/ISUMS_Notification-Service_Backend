@@ -19,6 +19,18 @@ configurations {
         extendsFrom annotationProcessor
     }
 }
+configurations.configureEach {
+    resolutionStrategy {
+        force 'com.google.protobuf:protobuf-java:4.34.0'
+        force 'com.google.protobuf:protobuf-java-util:4.34.0'
+        eachDependency { details ->
+            if (details.requested.group == 'com.google.protobuf' && (details.requested.name == 'protobuf-java' || details.requested.name == 'protobuf-java-util')) {
+                details.useVersion '4.34.0'
+                details.because 'Keep protobuf runtime aligned with generated proto-common classes'
+            }
+        }
+    }
+}
 
 repositories {
     mavenCentral()
@@ -26,6 +38,14 @@ repositories {
     maven {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/Management-System-for-Rental-SEP490/ISUMS_Proto-common_gRPC-Maven-local")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR") ?: ""
+            password = System.getenv("GITHUB_TOKEN") ?: ""
+        }
+    }
+    maven {
+        name = "GitHubPackagesObservability"
+        url = uri("https://maven.pkg.github.com/Management-System-for-Rental-SEP490/ISUMS_Observability-Common")
         credentials {
             username = System.getenv("GITHUB_ACTOR") ?: ""
             password = System.getenv("GITHUB_TOKEN") ?: ""
@@ -39,6 +59,12 @@ ext {
 }
 
 dependencies {
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'com.isums:isums-observability-common:1.0-SNAPSHOT'
     implementation 'org.springframework.boot:spring-boot-starter-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'io.grpc:grpc-services'
@@ -48,8 +74,23 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
     implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0"))
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-ses'
+    // Polly for Japanese/English TTS pre-synth + S3 for audio cache
+    implementation 'software.amazon.awssdk:polly'
+    implementation 'software.amazon.awssdk:s3'
+    // SNS for transactional SMS (primary VN SMS path — works without
+    // brandname registration; in Sandbox mode requires per-destination
+    // phone-number verification, then auto-promoted out of Sandbox once
+    // AWS approves the production access request).
+    implementation 'software.amazon.awssdk:sns'
+    implementation 'software.amazon.awssdk:pinpointsmsvoicev2'
+    // Stringee REST API JWT auth (HS256 signing). nimbus-jose-jwt already
+    // pulled by spring-boot-starter-oauth2-resource-server, but pin here
+    // for clarity.
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.40'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation "org.springframework.grpc:spring-grpc-client-spring-boot-starter"
     implementation "org.springframework.grpc:spring-grpc-spring-boot-starter"
@@ -63,8 +104,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
-    implementation 'com.google.protobuf:protobuf-java:4.34.0-RC2'
+    implementation 'com.google.protobuf:protobuf-java:4.34.0'
     implementation "com.isums:proto-common:1.0-SNAPSHOT"
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
     testImplementation 'org.springframework.security:spring-security-test'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
@@ -88,4 +130,9 @@ tasks.named('bootBuildImage') {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
 }

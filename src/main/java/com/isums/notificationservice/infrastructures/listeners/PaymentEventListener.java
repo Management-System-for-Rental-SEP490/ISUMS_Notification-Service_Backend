@@ -61,7 +61,7 @@ public class PaymentEventListener {
             }
 
             Map<String, Object> vars = new HashMap<>();
-            vars.put("tenantName", safe(user.getName(), "bạn"));
+            vars.put("tenantName", safe(user.getName(), "you"));
             vars.put("invoiceType", translateType(event.invoiceType()));
             vars.put("amount", formatVnd(event.amount()));
             vars.put("txnNo", event.txnNo());
@@ -89,18 +89,18 @@ public class PaymentEventListener {
 
     private String translateType(String type) {
         return switch (type) {
-            case "DEPOSIT" -> "Tiền cọc";
-            case "MONTHLY_RENT" -> "Tiền thuê tháng";
-            case "MAINTENANCE" -> "Phí sửa chữa";
-            case "UTILITY" -> "Phí tiện ích";
-            case "PENALTY" -> "Tiền phạt";
-            default -> "Hóa đơn";
+            case "DEPOSIT" -> "Deposit";
+            case "MONTHLY_RENT" -> "Monthly rent";
+            case "MAINTENANCE" -> "Repair fee";
+            case "UTILITY" -> "Utility fee";
+            case "PENALTY" -> "Penalty";
+            default -> "Invoice";
         };
     }
 
     private String formatVnd(Long amount) {
         if (amount == null) return "0 ₫";
-        return NumberFormat.getNumberInstance(new Locale("vi", "VN")).format(amount) + " ₫";
+        return NumberFormat.getNumberInstance(Locale.of("vi", "VN")).format(amount) + " ₫";
     }
 
     private String safe(String s, String fb) {

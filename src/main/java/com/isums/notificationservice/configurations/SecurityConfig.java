@@ -14,7 +14,20 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/prometheus").permitAll()
+                        .requestMatchers(
+                                "/actuator/prometheus",
+                                "/api/notifications/v3/api-docs",
+                                "/api/notifications/v3/api-docs/**",
+                                "/api/notifications/swagger",
+                                "/api/notifications/swagger/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/api/notifications/voice/stringee-webhook",
+                                "/api/notifications/voice/stringee-answer-url",
+                                "/api/notifications/internal/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

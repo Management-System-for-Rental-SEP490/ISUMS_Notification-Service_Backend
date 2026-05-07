@@ -80,11 +80,22 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    /**
+     * Log extra vars that publishers sent but the template's allowedVars
+     * doesn't declare. Used to throw — which broke every email whenever a
+     * publisher and the template seeder drifted (e.g. `hasPdf` added to the
+     * payment-service publisher months after the template was first seeded).
+     * Mustache silently ignores unused variables, so the email still renders
+     * correctly; the only cost of unexpected vars is slightly noisy logs,
+     * which beats losing the email + retry-looping + DLT-stuck altogether.
+     * Keep the check as a DEV signal so the seeder can be updated, but
+     * never fail the send.
+     */
     private void validateVars(EmailTemplateCached tpl, Map<String, Object> vars) {
         if (tpl.allowedVars() == null || tpl.allowedVars().isEmpty()) return;
         for (String k : vars.keySet()) {
             if (!tpl.allowedVars().contains(k)) {
-                throw new IllegalArgumentException("Variable not allowed: " + k);
+                log.warn("Extra template variable (not in allowedVars, will be ignored by Mustache): {}", k);
             }
         }
     }
