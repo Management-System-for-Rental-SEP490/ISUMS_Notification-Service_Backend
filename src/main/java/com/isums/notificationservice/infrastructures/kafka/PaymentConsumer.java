@@ -94,10 +94,10 @@ public class PaymentConsumer {
                     record.value(), PowerCutReviewRequestedEvent.class);
 
             notificationService.send(event.getManagerId(), NotificationCategory.PAYMENT_OVERDUE,
-                    "Khách " + event.getTenantName()
-                            + " trễ " + event.getDaysLate() + " ngày — Xem xét cắt điện",
-                    "Tổng tiền cần thu: " + formatVnd(event.getTotalAmount())
-                            + ". Vào hệ thống để xác nhận cắt điện nếu cần.",
+                    "Tenant " + event.getTenantName()
+                            + " overdue by " + event.getDaysLate() + " days — consider power-cut",
+                    "Total amount due: " + formatVnd(event.getTotalAmount())
+                            + ". Open the system to confirm power-cut if needed.",
                     "/contracts/" + event.getContractId() + "/power-cut",
                     Map.of(
                             "contractId", event.getContractId().toString(),
@@ -133,8 +133,8 @@ public class PaymentConsumer {
                     record.value(), OverdueTerminationRequestedEvent.class);
 
             notificationService.send(event.getManagerId(), NotificationCategory.PAYMENT_OVERDUE,
-                    "Khách " + event.getTenantName() + " trễ tiền thuê 30 ngày",
-                    "Khách đã chậm thanh toán 30 ngày. Vui lòng xem xét chấm dứt hợp đồng.",
+                    "Tenant " + event.getTenantName() + " rent overdue 30 days",
+                    "The tenant is 30 days late on payment. Please consider terminating the contract.",
                     "/contracts/" + event.getContractId() + "/termination",
                     Map.of("contractId", event.getContractId().toString())
             );
@@ -150,43 +150,8 @@ public class PaymentConsumer {
         }
     }
 
-//    @KafkaListener(topics = "payment.power-cut-requested", groupId = "notification-group")
-//    public void handlePowerCutRequest(
-//            ConsumerRecord<String, String> record, Acknowledgment ack) {
-//
-//        String messageId = kafkaHelper.extractMessageId(record);
-//        try {
-//            if (idempotencyService.isDuplicate(messageId)) {
-//                ack.acknowledge();
-//                return;
-//            }
-//
-//            PowerCutRequestEvent event = objectMapper.readValue(
-//                    record.value(), PowerCutRequestEvent.class);
-//
-//            notificationService.send(event.getContractId(),
-//                    NotificationCategory.PAYMENT_OVERDUE,
-//                    "Tenant trễ tiền thuê 14 ngày — Xem xét cắt điện",
-//                    "Khách thuê đã chậm thanh toán " + event.getDaysLate()
-//                            + " ngày. Tổng tiền: " + formatVnd(event.getTotalAmount())
-//                            + ". Bấm xác nhận nếu muốn cắt điện.",
-//                    "/contracts/" + event.getContractId() + "/power-cut",
-//                    Map.of(
-//                            "contractId", event.getContractId().toString(),
-//                            "invoiceId", event.getInvoiceId().toString(),
-//                            "daysLate", String.valueOf(event.getDaysLate())
-//                    )
-//            );
-//
-//            idempotencyService.markProcessed(messageId);
-//            ack.acknowledge();
-//        } catch (Exception e) {
-//            log.error("[Notification] handlePowerCutRequest failed: {}", e.getMessage(), e);
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     private String formatVnd(Long amount) {
         return NumberFormat.getNumberInstance(Locale.of("vi", "VN")).format(amount) + " ₫";
     }
 }
+

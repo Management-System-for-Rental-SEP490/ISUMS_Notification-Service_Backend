@@ -5,6 +5,7 @@ import com.isums.notificationservice.domains.entities.ManagerNotification;
 import com.isums.notificationservice.domains.enums.NotificationCategory;
 import com.isums.notificationservice.exceptions.NotFoundException;
 import com.isums.notificationservice.infrastructures.Websockets.SseConnectionManager;
+import com.isums.notificationservice.infrastructures.kafka.NotificationTranslationRequester;
 import com.isums.notificationservice.infrastructures.repositories.ManagerNotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,7 @@ class ManagerNotificationServiceImplTest {
 
     @Mock private ManagerNotificationRepository repo;
     @Mock private SseConnectionManager sseManager;
+    @Mock private NotificationTranslationRequester translationRequester;
 
     @InjectMocks private ManagerNotificationServiceImpl service;
 
@@ -62,10 +64,17 @@ class ManagerNotificationServiceImplTest {
             ManagerNotification saved = cap.getValue();
             assertThat(saved.getRecipientId()).isEqualTo(recipientId);
             assertThat(saved.getTitle()).isEqualTo("Title");
+            assertThat(saved.getTitleTranslations().asMap()).containsEntry("en", "Title");
+            assertThat(saved.getTitleTranslations().asMap()).doesNotContainEntry("vi", "en");
+            assertThat(saved.getTitleTranslations().asMap()).doesNotContainEntry("ja", "Title");
+            assertThat(saved.getBodyTranslations().asMap()).containsEntry("en", "Body");
+            assertThat(saved.getBodyTranslations().asMap()).doesNotContainEntry("vi", "en");
+            assertThat(saved.getBodyTranslations().asMap()).doesNotContainEntry("ja", "Body");
             assertThat(saved.getCategory()).isEqualTo(NotificationCategory.PAYMENT_OVERDUE);
             assertThat(saved.isRead()).isFalse();
 
             verify(sseManager).push(recipientId, saved);
+            verify(translationRequester).requestMissing(saved, "en");
         }
     }
 

@@ -1,5 +1,7 @@
 package com.isums.notificationservice.domains.entities;
 
+import com.isums.common.i18n.TranslationMap;
+import com.isums.common.i18n.TranslationMapConverter;
 import com.isums.notificationservice.domains.enums.NotificationCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -42,8 +44,16 @@ public class ManagerNotification {
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "title_translations", columnDefinition = "text")
+    @Convert(converter = TranslationMapConverter.class)
+    private TranslationMap titleTranslations;
+
     @Column(nullable = false, columnDefinition = "text")
     private String body;
+
+    @Column(name = "body_translations", columnDefinition = "text")
+    @Convert(converter = TranslationMapConverter.class)
+    private TranslationMap bodyTranslations;
 
     private String actionUrl;
 

@@ -32,7 +32,6 @@ public class EmailTemplateSeeder {
         };
     }
 
-    // WELCOME USER (vi_VN)
     @Transactional
     public void seed(EmailTemplateRepository templateRepo, EmailTemplateVersionRepository versionRepo) {
 
@@ -68,7 +67,7 @@ public class EmailTemplateSeeder {
                                         🎉 Chào mừng đến với ISUMS
                                       </div>
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;opacity:.9;margin-top:6px;">
-                                        Hệ thống quản lý nhà trọ thông minh
+                                        Hệ thống quản lý nhà nguyên căn thông minh
                                       </div>
                                     </td>
                                   </tr>
@@ -80,7 +79,7 @@ public class EmailTemplateSeeder {
                                       </p>
                                       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;">
                                         Tài khoản ISUMS của bạn đã được kích hoạt thành công. Bắt đầu hành trình
-                                        quản lý nhà trọ tiện lợi ngay hôm nay.
+                                        quản lý nhà nguyên căn tiện lợi ngay hôm nay.
                                       </p>
 
                                       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0;">
@@ -129,7 +128,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-        // E-CONTRACT VIEW + CONFIRM (vi_VN)
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "econtract_view_confirm",
@@ -149,13 +147,13 @@ public class EmailTemplateSeeder {
                           <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
                             Bạn có một hợp đồng thuê nhà cần xem và xác nhận.
                           </div>
-                        
+
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb;padding:24px 12px;">
                             <tr>
                               <td align="center">
                                 <table role="presentation" width="600" cellpadding="0" cellspacing="0"
                                        style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
-                        
+
                                   <tr>
                                     <td style="padding:20px 24px;background:#0b5cff;color:#ffffff;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1.2;">
@@ -166,18 +164,18 @@ public class EmailTemplateSeeder {
                                       </div>
                                     </td>
                                   </tr>
-                        
+
                                   <tr>
                                     <td style="padding:24px;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#101828;line-height:1.6;">
                                         Xin chào <strong>{{tenantName}}</strong>,
                                       </div>
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#344054;line-height:1.7;margin-top:10px;">
                                         Bạn vừa nhận được hợp đồng thuê nhà từ <strong>{{landlordName}}</strong>.
                                         Vui lòng nhấn <strong>Xem hợp đồng</strong> để đọc nội dung và tiến hành xác nhận nếu đồng ý.
                                       </div>
-                        
+
                                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
                                         <tr>
                                           <td style="padding:14px 16px;background:#f2f4f7;border-radius:12px;">
@@ -190,7 +188,7 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-                        
+
                                       <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
                                         <tr>
                                           <td>
@@ -210,7 +208,7 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:18px;">
                                         Nếu bạn không bấm được nút, hãy copy &amp; paste link sau vào trình duyệt:
                                         <div style="word-break:break-all;margin-top:6px;">
@@ -218,21 +216,21 @@ public class EmailTemplateSeeder {
                                           <strong>Xác nhận:</strong> {{confirmUrl}}
                                         </div>
                                       </div>
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:14px;">
                                         Vì lý do bảo mật, đường dẫn xác nhận có thể hết hạn sau <strong>{{expiresIn}}</strong>.
                                         Nếu bạn không yêu cầu email này, vui lòng bỏ qua.
                                       </div>
-                        
+
                                       <hr style="border:none;border-top:1px solid #eaecf0;margin:22px 0;">
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#98a2b3;line-height:1.6;">
                                         Trân trọng,<br>
                                         Đội ngũ ISUMS
                                       </div>
                                     </td>
                                   </tr>
-                        
+
                                   <tr>
                                     <td style="padding:16px 24px;background:#fafafa;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#98a2b3;line-height:1.6;">
@@ -240,7 +238,7 @@ public class EmailTemplateSeeder {
                                       </div>
                                     </td>
                                   </tr>
-                        
+
                                 </table>
                               </td>
                             </tr>
@@ -250,18 +248,314 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Xin chào {{tenantName}}
-                        
+
                         Bạn vừa nhận được hợp đồng thuê nhà từ {{landlordName}}.
-                        
+
                         Mã hợp đồng: {{contractNo}}
                         Tên hợp đồng: {{contractName}}
                         Địa chỉ: {{propertyAddress}}
                         Thời hạn: {{startDate}} - {{endDate}}
-                        
+
                         Xem hợp đồng: {{viewUrl}}
                         Xác nhận đồng ý: {{confirmUrl}}
-                        
+
                         Lưu ý: Link xác nhận có thể hết hạn sau {{expiresIn}}.
+                        """,
+                List.of(
+                        "tenantName",
+                        "landlordName",
+                        "contractNo",
+                        "contractName",
+                        "propertyAddress",
+                        "startDate",
+                        "endDate",
+                        "viewUrl",
+                        "confirmUrl",
+                        "expiresIn"
+                ),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "econtract_view_confirm",
+                "CONTRACT",
+                "TENANT",
+                LocaleType.en_US,
+                "Please review and confirm your lease contract {{contractNo}}",
+                """
+                        <!doctype html>
+                        <html lang="en">
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width,initial-scale=1">
+                          <title>Confirm your lease contract</title>
+                        </head>
+                        <body style="margin:0;padding:0;background:#f6f7fb;">
+                          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+                            You have a lease contract to review and confirm.
+                          </div>
+
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb;padding:24px 12px;">
+                            <tr>
+                              <td align="center">
+                                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                       style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
+
+                                  <tr>
+                                    <td style="padding:20px 24px;background:#0b5cff;color:#ffffff;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1.2;">
+                                        ISUMS • Lease contract
+                                      </div>
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;opacity:.9;margin-top:6px;">
+                                        Please review and confirm your contract
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                  <tr>
+                                    <td style="padding:24px;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#101828;line-height:1.6;">
+                                        Hello <strong>{{tenantName}}</strong>,
+                                      </div>
+
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#344054;line-height:1.7;margin-top:10px;">
+                                        You have received a lease contract from <strong>{{landlordName}}</strong>.
+                                        Please click <strong>View contract</strong> to read the details and confirm if you agree.
+                                      </div>
+
+                                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+                                        <tr>
+                                          <td style="padding:14px 16px;background:#f2f4f7;border-radius:12px;">
+                                            <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#475467;line-height:1.6;">
+                                              <div><strong>Contract no.:</strong> {{contractNo}}</div>
+                                              <div><strong>Contract name:</strong> {{contractName}}</div>
+                                              <div><strong>Address:</strong> {{propertyAddress}}</div>
+                                              <div><strong>Term:</strong> {{startDate}} – {{endDate}}</div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </table>
+
+                                      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+                                        <tr>
+                                          <td>
+                                            <a href="{{viewUrl}}"
+                                               style="display:inline-block;background:#0b5cff;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;
+                                                      font-size:14px;font-weight:700;padding:12px 18px;border-radius:10px;">
+                                              View contract
+                                            </a>
+                                          </td>
+                                          <td style="width:12px;"></td>
+                                          <td>
+                                            <a href="{{confirmUrl}}"
+                                               style="display:inline-block;background:#12b76a;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;
+                                                      font-size:14px;font-weight:700;padding:12px 18px;border-radius:10px;">
+                                              I agree (Confirm)
+                                            </a>
+                                          </td>
+                                        </tr>
+                                      </table>
+
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:18px;">
+                                        If the buttons don't work, copy &amp; paste these links into your browser:
+                                        <div style="word-break:break-all;margin-top:6px;">
+                                          <strong>View contract:</strong> {{viewUrl}}<br>
+                                          <strong>Confirm:</strong> {{confirmUrl}}
+                                        </div>
+                                      </div>
+
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:14px;">
+                                        For security reasons, the confirmation link may expire after <strong>{{expiresIn}}</strong>.
+                                        If you did not request this email, please ignore it.
+                                      </div>
+
+                                      <hr style="border:none;border-top:1px solid #eaecf0;margin:22px 0;">
+
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#98a2b3;line-height:1.6;">
+                                        Best regards,<br>
+                                        The ISUMS team
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                  <tr>
+                                    <td style="padding:16px 24px;background:#fafafa;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#98a2b3;line-height:1.6;">
+                                        This email is sent automatically. Please do not reply to this address.
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                """
+                        Hello {{tenantName}}
+
+                        You have received a lease contract from {{landlordName}}.
+
+                        Contract no.: {{contractNo}}
+                        Contract name: {{contractName}}
+                        Address: {{propertyAddress}}
+                        Term: {{startDate}} - {{endDate}}
+
+                        View contract: {{viewUrl}}
+                        Confirm: {{confirmUrl}}
+
+                        Note: the confirmation link may expire after {{expiresIn}}.
+                        """,
+                List.of(
+                        "tenantName",
+                        "landlordName",
+                        "contractNo",
+                        "contractName",
+                        "propertyAddress",
+                        "startDate",
+                        "endDate",
+                        "viewUrl",
+                        "confirmUrl",
+                        "expiresIn"
+                ),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "econtract_view_confirm",
+                "CONTRACT",
+                "TENANT",
+                LocaleType.ja_JP,
+                "賃貸借契約 {{contractNo}} のご確認のお願い",
+                """
+                        <!doctype html>
+                        <html lang="ja">
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width,initial-scale=1">
+                          <title>賃貸借契約のご確認</title>
+                        </head>
+                        <body style="margin:0;padding:0;background:#f6f7fb;">
+                          <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+                            ご確認いただきたい賃貸借契約があります。
+                          </div>
+
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb;padding:24px 12px;">
+                            <tr>
+                              <td align="center">
+                                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                       style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
+
+                                  <tr>
+                                    <td style="padding:20px 24px;background:#0b5cff;color:#ffffff;">
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1.2;">
+                                        ISUMS • 賃貸借契約
+                                      </div>
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:13px;opacity:.9;margin-top:6px;">
+                                        契約内容をご確認ください
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                  <tr>
+                                    <td style="padding:24px;">
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:16px;color:#101828;line-height:1.6;">
+                                        <strong>{{tenantName}}</strong> 様
+                                      </div>
+
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:14px;color:#344054;line-height:1.7;margin-top:10px;">
+                                        <strong>{{landlordName}}</strong> より賃貸借契約が届きました。
+                                        <strong>契約書を表示</strong> をクリックし、内容をご確認のうえ、ご同意いただける場合は確認ボタンを押してください。
+                                      </div>
+
+                                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+                                        <tr>
+                                          <td style="padding:14px 16px;background:#f2f4f7;border-radius:12px;">
+                                            <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:13px;color:#475467;line-height:1.6;">
+                                              <div><strong>契約番号:</strong> {{contractNo}}</div>
+                                              <div><strong>契約名:</strong> {{contractName}}</div>
+                                              <div><strong>住所:</strong> {{propertyAddress}}</div>
+                                              <div><strong>契約期間:</strong> {{startDate}} – {{endDate}}</div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </table>
+
+                                      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+                                        <tr>
+                                          <td>
+                                            <a href="{{viewUrl}}"
+                                               style="display:inline-block;background:#0b5cff;color:#ffffff;text-decoration:none;font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;
+                                                      font-size:14px;font-weight:700;padding:12px 18px;border-radius:10px;">
+                                              契約書を表示
+                                            </a>
+                                          </td>
+                                          <td style="width:12px;"></td>
+                                          <td>
+                                            <a href="{{confirmUrl}}"
+                                               style="display:inline-block;background:#12b76a;color:#ffffff;text-decoration:none;font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;
+                                                      font-size:14px;font-weight:700;padding:12px 18px;border-radius:10px;">
+                                              同意して確認
+                                            </a>
+                                          </td>
+                                        </tr>
+                                      </table>
+
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:18px;">
+                                        ボタンが動作しない場合は、以下のリンクをブラウザにコピーしてください。
+                                        <div style="word-break:break-all;margin-top:6px;">
+                                          <strong>契約書を表示:</strong> {{viewUrl}}<br>
+                                          <strong>確認:</strong> {{confirmUrl}}
+                                        </div>
+                                      </div>
+
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:12px;color:#667085;line-height:1.6;margin-top:14px;">
+                                        セキュリティのため、確認リンクは <strong>{{expiresIn}}</strong> 後に失効する場合があります。
+                                        本メールにお心当たりがない場合は、破棄してください。
+                                      </div>
+
+                                      <hr style="border:none;border-top:1px solid #eaecf0;margin:22px 0;">
+
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:12px;color:#98a2b3;line-height:1.6;">
+                                        敬具<br>
+                                        ISUMS チーム
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                  <tr>
+                                    <td style="padding:16px 24px;background:#fafafa;">
+                                      <div style="font-family:'Yu Gothic','Meiryo',Arial,Helvetica,sans-serif;font-size:11px;color:#98a2b3;line-height:1.6;">
+                                        本メールは自動送信されています。ご返信いただかないようお願いいたします。
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                """
+                        {{tenantName}} 様
+
+                        {{landlordName}} より賃貸借契約が届きました。
+
+                        契約番号: {{contractNo}}
+                        契約名: {{contractName}}
+                        住所: {{propertyAddress}}
+                        契約期間: {{startDate}} - {{endDate}}
+
+                        契約書を表示: {{viewUrl}}
+                        同意して確認: {{confirmUrl}}
+
+                        ※確認リンクは {{expiresIn}} 後に失効する場合があります。
                         """,
                 List.of(
                         "tenantName",
@@ -303,16 +597,16 @@ public class EmailTemplateSeeder {
                                 <table role="presentation" width="600" cellpadding="0" cellspacing="0"
                                        style="background:#fff;border-radius:16px;overflow:hidden;
                                               box-shadow:0 2px 8px rgba(0,0,0,.08);max-width:600px;width:100%;">
-                        
+
                                   <tr>
                                     <td style="background:#1a56db;padding:28px 32px;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;
                                                   font-weight:700;color:#fff;">💳 Hóa đơn thanh toán</div>
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;
-                                                  color:#bfdbfe;margin-top:6px;">ISUMS — Hệ thống quản lý nhà trọ</div>
+                                                  color:#bfdbfe;margin-top:6px;">ISUMS — Hệ thống quản lý nhà nguyên căn</div>
                                     </td>
                                   </tr>
-                        
+
                                   <tr>
                                     <td style="padding:28px 32px;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;
@@ -320,7 +614,7 @@ public class EmailTemplateSeeder {
                                         Xin chào,<br>
                                         Bạn có một hóa đơn cần thanh toán. Vui lòng thanh toán trước hạn để tránh phát sinh phí trễ hạn.
                                       </div>
-                        
+
                                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
                                              style="margin-top:20px;background:#f9fafb;border-radius:12px;overflow:hidden;">
                                         <tr>
@@ -351,7 +645,7 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-                        
+
                                       <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;">
                                         <tr>
                                           <td>
@@ -365,26 +659,26 @@ public class EmailTemplateSeeder {
                                           </td>
                                         </tr>
                                       </table>
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
                                                   color:#6b7280;line-height:1.6;margin-top:18px;">
                                         Nếu không bấm được nút, hãy copy link sau vào trình duyệt:<br>
                                         <div style="word-break:break-all;margin-top:4px;color:#1a56db;">{{paymentUrl}}</div>
                                       </div>
-                        
+
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;
                                                   color:#6b7280;line-height:1.6;margin-top:14px;">
                                         Link thanh toán hợp lệ trong <strong>{{expiresIn}}</strong>.
                                         Nếu bạn không yêu cầu email này, vui lòng bỏ qua.
                                       </div>
-                        
+
                                       <hr style="border:none;border-top:1px solid #e5e7eb;margin:22px 0;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;">
                                         Trân trọng,<br>Đội ngũ ISUMS
                                       </div>
                                     </td>
                                   </tr>
-                        
+
                                   <tr>
                                     <td style="padding:14px 32px;background:#f9fafb;">
                                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#9ca3af;">
@@ -392,7 +686,7 @@ public class EmailTemplateSeeder {
                                       </div>
                                     </td>
                                   </tr>
-                        
+
                                 </table>
                               </td>
                             </tr>
@@ -400,23 +694,24 @@ public class EmailTemplateSeeder {
                         </body>
                         </html>
                         """,
-                // ── TEXT ──────────────────────────────────────────────────────
+
                 """
                         Xin chào,
-                        
+
                         Bạn có hóa đơn {{invoiceType}} cần thanh toán.
-                        
+
                         Số tiền: {{amount}}
                         Hạn nộp: {{dueDate}}
-                        
+
                         Thanh toán tại: {{paymentUrl}}
-                        
+
                         Link có hiệu lực trong {{expiresIn}}.
-                        
+
                         Trân trọng,
                         Đội ngũ ISUMS
                         """,
-                List.of("invoiceType", "amount", "dueDate", "paymentUrl", "expiresIn"),
+                List.of("invoiceType", "invoiceTypeVi", "invoiceTypeEn", "invoiceTypeJa", "invoiceTypeCode",
+                        "amount", "dueDate", "paymentUrl", "expiresIn"),
                 "system"
         );
 
@@ -437,25 +732,25 @@ public class EmailTemplateSeeder {
                               <table role="presentation" width="600" cellpadding="0" cellspacing="0"
                                      style="background:#fff;border-radius:16px;overflow:hidden;
                                             box-shadow:0 2px 8px rgba(0,0,0,.08);max-width:600px;width:100%;">
-                        
+
                                 <tr>
                                   <td style="background:#16a34a;padding:28px 32px;">
                                     <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;color:#fff;">
                                       ✅ Thanh toán thành công
                                     </div>
                                     <div style="font-family:Arial,sans-serif;font-size:13px;color:#bbf7d0;margin-top:6px;">
-                                      ISUMS — Hệ thống quản lý nhà trọ
+                                      ISUMS — Hệ thống quản lý nhà nguyên căn
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                                 <tr>
                                   <td style="padding:28px 32px;">
                                     <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.7;">
                                       Xin chào <strong>{{tenantName}}</strong>,<br>
                                       Hệ thống đã ghi nhận thanh toán của bạn.
                                     </div>
-                        
+
                                     <table role="presentation" width="100%" style="margin-top:20px;border-radius:12px;
                                             overflow:hidden;background:#f9fafb;">
                                       <tr>
@@ -491,19 +786,19 @@ public class EmailTemplateSeeder {
                                         </td>
                                       </tr>
                                     </table>
-                        
+
                                     <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b7280;margin-top:20px;line-height:1.6;">
                                       Vui lòng lưu lại email này như biên nhận thanh toán.
                                       Nếu có thắc mắc, liên hệ chủ nhà hoặc hỗ trợ ISUMS.
                                     </div>
-                        
+
                                     <hr style="border:none;border-top:1px solid #e5e7eb;margin:22px 0;">
                                     <div style="font-family:Arial,sans-serif;font-size:12px;color:#9ca3af;">
                                       Trân trọng,<br>Đội ngũ ISUMS
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                                 <tr>
                                   <td style="padding:14px 32px;background:#f9fafb;">
                                     <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
@@ -511,7 +806,7 @@ public class EmailTemplateSeeder {
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                               </table>
                             </td></tr>
                           </table>
@@ -520,15 +815,15 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Xin chào {{tenantName}},
-                        
+
                         Hệ thống đã ghi nhận thanh toán:
                         - Loại: {{invoiceType}}
                         - Số tiền: {{amount}}
                         - Mã GD: {{txnNo}}
                         - Thời gian: {{paidAt}}
-                        
+
                         Vui lòng lưu lại email này như biên nhận.
-                        
+
                         Trân trọng,
                         Đội ngũ ISUMS
                         """,
@@ -554,13 +849,13 @@ public class EmailTemplateSeeder {
                               <table role="presentation" width="600" cellpadding="0" cellspacing="0"
                                      style="background:#fff;border-radius:20px;overflow:hidden;
                                             box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%;">
-                        
+
                                 <!-- Header -->
                                 <tr>
                                   <td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);padding:36px 40px;">
                                     <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
                                                 color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
-                                      ISUMS · Quản lý nhà trọ
+                                      ISUMS · Quản lý nhà nguyên căn
                                     </div>
                                     <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;line-height:1.3;">
                                       Chào mừng bạn! 🎉
@@ -570,7 +865,7 @@ public class EmailTemplateSeeder {
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                                 <!-- Body -->
                                 <tr>
                                   <td style="padding:36px 40px;">
@@ -579,7 +874,7 @@ public class EmailTemplateSeeder {
                                       Chủ nhà đã kích hoạt tài khoản ISUMS cho bạn.
                                       Dưới đây là thông tin đăng nhập tạm thời — vui lòng đổi mật khẩu ngay sau khi đăng nhập.
                                     </div>
-                        
+
                                     <!-- Thông tin đăng nhập -->
                                     <table role="presentation" width="100%"
                                            style="margin-top:24px;border-radius:14px;overflow:hidden;
@@ -601,15 +896,16 @@ public class EmailTemplateSeeder {
                                       </tr>
                                       <tr>
                                         <td style="padding:16px 24px;">
-                                          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Mật khẩu tạm thời</div>
-                                          <div style="font-family:monospace;font-size:20px;font-weight:700;
-                                                      color:#1e40af;margin-top:6px;letter-spacing:2px;
-                                                      background:#eff6ff;padding:10px 16px;border-radius:8px;
-                                                      display:inline-block;">{{password}}</div>
+                                          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Mật khẩu tạm</div>
+                                          <div style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;
+                                                      color:#1e40af;margin-top:6px;background:#eff6ff;padding:12px 16px;
+                                                      border-radius:8px;letter-spacing:0.5px;font-family:monospace;">{{password}}</div>
+                                          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;
+                                                      margin-top:8px;">Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu.</div>
                                         </td>
                                       </tr>
                                     </table>
-                        
+
                                     <!-- Hóa đơn cần thanh toán (chỉ hiện nếu có) -->
                                     {{#hasInvoice}}
                                     <div style="margin-top:28px;">
@@ -655,7 +951,7 @@ public class EmailTemplateSeeder {
                                       </table>
                                     </div>
                                     {{/hasInvoice}}
-                        
+
                                     <!-- Note -->
                                     <div style="margin-top:28px;padding:16px 20px;background:#f9fafb;
                                                 border-radius:10px;border-left:3px solid #3b82f6;">
@@ -664,14 +960,14 @@ public class EmailTemplateSeeder {
                                         Mọi hóa đơn và lịch sử thanh toán có thể xem trong ứng dụng ISUMS.
                                       </div>
                                     </div>
-                        
+
                                     <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
                                     <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;line-height:1.6;">
                                       Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                                 <!-- Footer -->
                                 <tr>
                                   <td style="padding:16px 40px;background:#f9fafb;border-top:1px solid #f3f4f6;">
@@ -680,7 +976,7 @@ public class EmailTemplateSeeder {
                                     </div>
                                   </td>
                                 </tr>
-                        
+
                               </table>
                             </td></tr>
                           </table>
@@ -689,13 +985,13 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Xin chào {{name}},
-                        
+
                         Tài khoản ISUMS của bạn đã được kích hoạt.
-                        
+
                         Thông tin đăng nhập:
                         - Email    : {{email}}
-                        - Mật khẩu: {{password}}
-                        
+                        - Mật khẩu tạm : {{password}} (đổi ngay sau khi đăng nhập lần đầu)
+
                         {{#hasInvoice}}
                         Khoản cần thanh toán:
                         - Loại    : {{invoiceType}}
@@ -703,14 +999,13 @@ public class EmailTemplateSeeder {
                         - Hạn TT  : {{invoiceDueDate}}
                         - Link    : {{invoicePaymentUrl}}
                         {{/hasInvoice}}
-                        
-                        Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
-                        
+
                         Trân trọng,
                         Đội ngũ ISUMS
                         """,
                 List.of("name", "email", "password", "hasInvoice",
-                        "invoiceType", "invoiceAmount", "invoiceDueDate", "invoicePaymentUrl"),
+                        "invoiceType", "invoiceTypeVi", "invoiceTypeEn", "invoiceTypeJa", "invoiceTypeCode",
+                        "invoiceAmount", "invoiceDueDate", "invoicePaymentUrl"),
                 "system"
         );
 
@@ -732,7 +1027,7 @@ public class EmailTemplateSeeder {
                                   <td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);padding:36px 40px;">
                                     <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
                                                 color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
-                                      ISUMS · Quản lý nhà trọ
+                                      ISUMS · Quản lý nhà nguyên căn
                                     </div>
                                     <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;">
                                       Hợp đồng đã hoàn tất ✅
@@ -788,12 +1083,10 @@ public class EmailTemplateSeeder {
                         Tải về tại: {{signedPdfUrl}}
                         Link hết hạn sau 7 ngày.
                         """,
-                List.of("contractId", "signedPdfUrl"),
+                List.of("contractId", "signedPdfUrl", "depositAmount", "depositDeadline"),
                 "system"
         );
 
-
-        // ── INSPECTION DONE REVIEW (manager) ──────────────────────────────
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "inspection_done_review", "CONTRACT", "MANAGER",
@@ -883,13 +1176,13 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Kính gửi {{managerName}},
-                        
+
                         Nhân viên đã hoàn thành kiểm tra nhà cho hợp đồng #{{contractId}}.
-                        
+
                         Mã kiểm tra: {{inspectionId}}
                         Số tiền khấu trừ đề xuất: {{deductionAmount}}
                         Ghi chú: {{notes}}
-                        
+
                         Vui lòng đăng nhập hệ thống để xác nhận hoàn cọc.
                         """,
                 List.of("managerName", "contractId", "inspectionId",
@@ -897,7 +1190,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// ── CONTRACT EXPIRED INSPECTION SCHEDULED (manager) ───────────────
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "contract_expired_inspection_scheduled", "CONTRACT", "MANAGER",
@@ -978,11 +1270,11 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Kính gửi {{managerName}},
-                        
+
                         Hợp đồng #{{contractId}} của khách {{tenantName}} đã hết hạn.
-                        
+
                         Mã kiểm tra: {{inspectionId}}
-                        
+
                         Hệ thống đã tự động phân công nhân viên kiểm tra nhà.
                         Vui lòng theo dõi tiến trình trên hệ thống.
                         """,
@@ -991,7 +1283,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-        // ── CONTRACT RENEWAL REMINDER (tenant) ────────────────────────────
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "contract_renewal_reminder", "CONTRACT", "TENANT",
@@ -1051,16 +1342,15 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Kính gửi {{tenantName}},
-                        
+
                         Hợp đồng #{{contractId}} của bạn còn {{daysRemaining}} ngày (hết hạn {{endDate}}).
-                        
+
                         Nếu muốn gia hạn, vui lòng liên hệ quản lý hoặc bấm Gia hạn trong app ISUMS.
                         """,
                 List.of("tenantName", "contractId", "daysRemaining", "endDate", "openForNew"),
                 "system"
         );
 
-// ── RENEWAL REQUEST RECEIVED (manager) ────────────────────────────
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "renewal_request_received", "CONTRACT", "MANAGER",
@@ -1138,19 +1428,18 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Kính gửi {{managerName}},
-                        
+
                         Khách {{tenantName}} vừa gửi yêu cầu gia hạn hợp đồng #{{contractId}}.
-                        
+
                         Tình trạng cạnh tranh: {{hasCompetingDeposit}}
                         Ghi chú: {{note}}
-                        
+
                         Vui lòng đăng nhập hệ thống để xử lý.
                         """,
                 List.of("managerName", "tenantName", "contractId", "hasCompetingDeposit", "note"),
                 "system"
         );
 
-// ── RENEWAL DECLINED (tenant) ──────────────────────────────────────
         upsertActiveV1(
                 templateRepo, versionRepo,
                 "renewal_declined", "CONTRACT", "TENANT",
@@ -1216,18 +1505,17 @@ public class EmailTemplateSeeder {
                         """,
                 """
                         Kính gửi {{tenantName}},
-                        
+
                         Yêu cầu gia hạn hợp đồng #{{contractId}} của bạn không được chấp thuận.
-                        
+
                         Lý do: {{reason}}
-                        
+
                         Nếu có thắc mắc, vui lòng liên hệ quản lý.
                         """,
                 List.of("tenantName", "contractId", "reason"),
                 "system"
         );
 
-        // late_payment_reminder_day0
         upsertActiveV1(templateRepo, versionRepo,
                 "late_payment_reminder_day0", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Nhắc nhở: Hóa đơn tiền thuê đến hạn hôm nay",
@@ -1271,7 +1559,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// late_payment_reminder_day1
         upsertActiveV1(templateRepo, versionRepo,
                 "late_payment_reminder_day1", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Nhắc lần 2: Hóa đơn tiền thuê quá hạn 1 ngày",
@@ -1309,7 +1596,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// late_payment_reminder_day2
         upsertActiveV1(templateRepo, versionRepo,
                 "late_payment_reminder_day2", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Cảnh báo: Hóa đơn tiền thuê quá hạn 2 ngày — còn 1 ngày trước khi bị phạt",
@@ -1347,7 +1633,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// late_payment_penalty_applied
         upsertActiveV1(templateRepo, versionRepo,
                 "late_payment_penalty_applied", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Thông báo: Áp dụng phí phạt trễ thanh toán {{penaltyPercent}}%",
@@ -1396,7 +1681,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// late_payment_formal_warning
         upsertActiveV1(templateRepo, versionRepo,
                 "late_payment_formal_warning", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Cảnh báo chính thức: Hóa đơn tiền thuê quá hạn 7 ngày — Tính năng app bị hạn chế",
@@ -1438,7 +1722,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// power_cut_warning_24h
         upsertActiveV1(templateRepo, versionRepo,
                 "power_cut_warning_24h", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Cảnh báo: Điện sẽ bị cắt sau 24 giờ do chưa thanh toán tiền thuê",
@@ -1479,7 +1762,6 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
-// overdue_termination_notice
         upsertActiveV1(templateRepo, versionRepo,
                 "overdue_termination_notice", "PAYMENT", "MANAGER", LocaleType.vi_VN,
                 "Thông báo: Khách {{tenantName}} trễ tiền thuê 30 ngày — Xem xét chấm dứt hợp đồng",
@@ -1521,6 +1803,245 @@ public class EmailTemplateSeeder {
                 "system"
         );
 
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_deposit_transferred", "CONTRACT", "TENANT", LocaleType.vi_VN,
+                "Cọc đã chuyển sang nhà mới — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#f0fdf4;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:36px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:20px;overflow:hidden;
+                                            box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%;">
+                                <tr>
+                                  <td style="background:linear-gradient(135deg,#15803d 0%,#22c55e 100%);padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                                                color:#bbf7d0;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+                                      ISUMS · Quản lý nhà nguyên căn
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;">
+                                      Cọc đã chuyển sang nhà mới ✅
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:14px;color:#bbf7d0;margin-top:8px;">
+                                      Hợp đồng mới đã được kích hoạt
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.8;">
+                                      Tiền cọc của hợp đồng cũ đã được chuyển sang hợp đồng mới
+                                      <strong style="color:#15803d;">#{{contractId}}</strong>.
+                                    </div>
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                           style="margin-top:24px;background:#f9fafb;border-radius:12px;overflow:hidden;">
+                                      <tr><td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Cọc gốc</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:16px;color:#111827;margin-top:4px;">{{depositAmount}}</div>
+                                      </td></tr>
+                                      <tr><td style="padding:14px 20px;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Số tiền đã chuyển</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;color:#15803d;margin-top:4px;">{{transferredAmount}}</div>
+                                      </td></tr>
+                                    </table>
+                                    <div style="margin-top:24px;padding:16px 20px;background:#f0fdf4;border-radius:10px;border-left:3px solid #22c55e;">
+                                      <div style="font-family:Arial,sans-serif;font-size:13px;color:#166534;line-height:1.7;">
+                                        ✅ Hợp đồng mới đã có hiệu lực — bạn không cần nộp thêm tiền cọc.
+                                      </div>
+                                    </div>
+                                    <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;">
+                                      Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:16px 40px;background:#f9fafb;border-top:1px solid #f3f4f6;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                                      Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Tiền cọc {{transferredAmount}} đã được chuyển sang hợp đồng mới #{{contractId}}.
+                        Cọc gốc: {{depositAmount}}.
+                        Bạn không cần nộp thêm tiền cọc.
+                        """,
+                List.of("contractId", "depositAmount", "transferredAmount"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_deposit_increase", "CONTRACT", "TENANT", LocaleType.vi_VN,
+                "Cần nộp thêm cọc {{additionalAmount}} cho nhà mới",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#fffbeb;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:36px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:20px;overflow:hidden;
+                                            box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%;">
+                                <tr>
+                                  <td style="background:linear-gradient(135deg,#b45309 0%,#f59e0b 100%);padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                                                color:#fde68a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+                                      ISUMS · Quản lý nhà nguyên căn
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;">
+                                      Cần nộp thêm tiền cọc 💰
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:14px;color:#fde68a;margin-top:8px;">
+                                      Cọc nhà mới cao hơn cọc nhà cũ
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.8;">
+                                      Cọc của hợp đồng cũ đã được chuyển sang hợp đồng mới
+                                      <strong>#{{contractId}}</strong>, tuy nhiên cọc nhà mới cao hơn
+                                      nên bạn cần nộp thêm phần chênh lệch.
+                                    </div>
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                           style="margin-top:24px;background:#f9fafb;border-radius:12px;overflow:hidden;">
+                                      <tr><td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Cọc gốc</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:16px;color:#111827;margin-top:4px;">{{originalAmount}}</div>
+                                      </td></tr>
+                                      <tr><td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Đã chuyển</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:16px;color:#111827;margin-top:4px;">{{transferredAmount}}</div>
+                                      </td></tr>
+                                      <tr><td style="padding:14px 20px;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#b45309;text-transform:uppercase;letter-spacing:.5px;">Cần nộp thêm</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#b45309;margin-top:4px;">{{additionalAmount}}</div>
+                                      </td></tr>
+                                    </table>
+                                    <div style="margin-top:24px;padding:14px 20px;background:#fef3c7;border-radius:10px;border-left:3px solid #f59e0b;">
+                                      <div style="font-family:Arial,sans-serif;font-size:13px;color:#92400e;line-height:1.7;">
+                                        ⏰ Hạn thanh toán: <strong>{{dueDate}}</strong>
+                                      </div>
+                                    </div>
+                                    <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;">
+                                      Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:16px 40px;background:#f9fafb;border-top:1px solid #f3f4f6;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                                      Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Cọc đã chuyển sang hợp đồng mới #{{contractId}}.
+                        Cọc gốc: {{originalAmount}}
+                        Đã chuyển: {{transferredAmount}}
+                        Cần nộp thêm: {{additionalAmount}} (hạn {{dueDate}}).
+                        """,
+                List.of("contractId", "originalAmount", "transferredAmount", "additionalAmount", "dueDate"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_deposit_refund", "CONTRACT", "TENANT", LocaleType.vi_VN,
+                "Hoàn lại {{refundAmount}} chênh lệch cọc — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#eff6ff;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:36px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:20px;overflow:hidden;
+                                            box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:600px;width:100%;">
+                                <tr>
+                                  <td style="background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 100%);padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                                                color:#bfdbfe;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+                                      ISUMS · Quản lý nhà nguyên căn
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:700;color:#fff;">
+                                      Hoàn tiền chênh lệch cọc 💸
+                                    </div>
+                                    <div style="font-family:Arial,sans-serif;font-size:14px;color:#bfdbfe;margin-top:8px;">
+                                      Cọc nhà mới thấp hơn cọc nhà cũ
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:36px 40px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.8;">
+                                      Cọc của hợp đồng cũ đã được chuyển sang hợp đồng mới
+                                      <strong>#{{contractId}}</strong> và phần chênh lệch sẽ được hoàn lại cho bạn.
+                                    </div>
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                           style="margin-top:24px;background:#f9fafb;border-radius:12px;overflow:hidden;">
+                                      <tr><td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Cọc gốc</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:16px;color:#111827;margin-top:4px;">{{originalAmount}}</div>
+                                      </td></tr>
+                                      <tr><td style="padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b7280;">Đã chuyển sang nhà mới</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:16px;color:#111827;margin-top:4px;">{{transferredAmount}}</div>
+                                      </td></tr>
+                                      <tr><td style="padding:14px 20px;">
+                                        <div style="font-family:Arial,sans-serif;font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;">Hoàn lại</div>
+                                        <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#1d4ed8;margin-top:4px;">{{refundAmount}}</div>
+                                      </td></tr>
+                                    </table>
+                                    <div style="margin-top:24px;padding:14px 20px;background:#eff6ff;border-radius:10px;border-left:3px solid #3b82f6;">
+                                      <div style="font-family:Arial,sans-serif;font-size:13px;color:#1e40af;line-height:1.7;">
+                                        💸 Phương thức hoàn: <strong>{{refundMethod}}</strong><br>
+                                        Tiền sẽ về tài khoản của bạn trong 1–3 ngày làm việc.
+                                      </div>
+                                    </div>
+                                    <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
+                                    <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;">
+                                      Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:16px 40px;background:#f9fafb;border-top:1px solid #f3f4f6;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                                      Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Cọc gốc: {{originalAmount}}
+                        Đã chuyển sang hợp đồng mới #{{contractId}}: {{transferredAmount}}
+                        Hoàn lại: {{refundAmount}} qua {{refundMethod}}.
+                        """,
+                List.of("contractId", "originalAmount", "transferredAmount", "refundAmount", "refundMethod"),
+                "system"
+        );
+
     }
 
     private void upsertActiveV1(
@@ -1547,12 +2068,24 @@ public class EmailTemplateSeeder {
                                 .build()
                 ));
 
-        boolean hasActive = versionRepo
+        EmailTemplateVersion existing = versionRepo
                 .findFirstByTemplate_TemplateKeyAndLocaleAndStatusOrderByVersionDesc(
                         templateKey, locale, TemplateStatus.ACTIVE
-                ).isPresent();
+                ).orElse(null);
 
-        if (hasActive) return;
+        if (existing != null) {
+            boolean changed = !equalsSafe(existing.getSubjectTpl(), subjectTpl)
+                    || !equalsSafe(existing.getHtmlTpl(), htmlTpl)
+                    || !equalsSafe(existing.getTextTpl(), textTpl);
+            if (!changed) return;
+            existing.setSubjectTpl(subjectTpl);
+            existing.setHtmlTpl(htmlTpl);
+            existing.setTextTpl(textTpl);
+            existing.setAllowedVars(allowedVars);
+            existing.setUpdatedBy(actor);
+            versionRepo.save(existing);
+            return;
+        }
 
         EmailTemplateVersion v1 = EmailTemplateVersion.builder()
                 .template(tpl)
@@ -1569,4 +2102,10 @@ public class EmailTemplateSeeder {
 
         versionRepo.save(v1);
     }
+
+    private static boolean equalsSafe(String a, String b) {
+        if (a == null) return b == null;
+        return a.equals(b);
+    }
 }
+

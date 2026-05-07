@@ -1,20 +1,24 @@
 package com.isums.notificationservice.services;
 
+import com.isums.common.i18n.TranslationMap;
 import com.isums.notificationservice.domains.dtos.NotificationDto;
 import com.isums.notificationservice.domains.entities.ManagerNotification;
 import com.isums.notificationservice.domains.enums.NotificationCategory;
 import com.isums.notificationservice.exceptions.NotFoundException;
 import com.isums.notificationservice.infrastructures.Websockets.SseConnectionManager;
 import com.isums.notificationservice.infrastructures.abstracts.ManagerNotificationService;
+import com.isums.notificationservice.infrastructures.kafka.NotificationTranslationRequester;
 import com.isums.notificationservice.infrastructures.repositories.ManagerNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +29,10 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
 
     private final ManagerNotificationRepository repo;
     private final SseConnectionManager sseManager;
+    private final NotificationTranslationRequester translationRequester;
+
+    @Value("${isums.i18n.notification.source-language:en}")
+    private String sourceLanguage = "en";
 
     @Override
     @Transactional
@@ -36,7 +44,9 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
                 .recipientId(recipientId)
                 .category(category)
                 .title(title)
+                .titleTranslations(sourceMap(title))
                 .body(body)
+                .bodyTranslations(sourceMap(body))
                 .actionUrl(actionUrl)
                 .metadata(metadata)
                 .isRead(false)
@@ -44,8 +54,19 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
 
         repo.save(n);
         sseManager.push(recipientId, n);
+        translationRequester.requestMissing(n, sourceLanguage);
 
         log.info("[Notification] Sent recipientId={} category={}", recipientId, category);
+    }
+
+    private TranslationMap sourceMap(String text) {
+        String code = TranslationMap.normalizeLanguage(sourceLanguage);
+        if (code == null || code.isBlank()) code = "en";
+        if (text == null || text.isBlank()) return TranslationMap.empty();
+        Map<String, String> source = new LinkedHashMap<>();
+        source.put(code, text);
+        source.put("_source", code);
+        return new TranslationMap(source);
     }
 
     @Override

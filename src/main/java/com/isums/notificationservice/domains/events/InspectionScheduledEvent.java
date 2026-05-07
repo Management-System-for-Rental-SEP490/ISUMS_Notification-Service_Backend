@@ -12,6 +12,7 @@ import java.util.UUID;
 public class InspectionScheduledEvent {
     private UUID contractId;
     private UUID inspectionId;
+    private UUID houseId;
     private UUID managerId;
     private String tenantName;
     private String messageId;

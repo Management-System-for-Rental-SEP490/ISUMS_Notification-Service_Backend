@@ -130,7 +130,7 @@ class UserEventListenerTest {
         private UserActivatedEvent eventWithInvoice(String paymentUrl) {
             return UserActivatedEvent.builder()
                     .userId(UUID.randomUUID())
-                    .email("bob@example.com").name("Bob").tempPassword("Temp@123")
+                    .email("bob@example.com").name("Bob")
                     .firstRentPaymentUrl(paymentUrl)
                     .firstRentAmount(5_000_000L)
                     .firstRentDueDate(Instant.now().plusSeconds(86400))

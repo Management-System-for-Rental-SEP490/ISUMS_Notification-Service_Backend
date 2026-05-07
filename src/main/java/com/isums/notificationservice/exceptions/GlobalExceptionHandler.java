@@ -4,19 +4,68 @@ import com.isums.notificationservice.domains.dtos.ApiError;
 import com.isums.notificationservice.domains.dtos.ApiResponse;
 import com.isums.notificationservice.domains.dtos.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 
 
 @RestControllerAdvice
+@Order(Ordered.LOWEST_PRECEDENCE)
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResource(NoResourceFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponses.fail(HttpStatus.NOT_FOUND, "Resource not found: " + ex.getResourcePath()));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        return ResponseEntity.status(status)
+                .body(ApiResponses.fail(status, ex.getReason() != null ? ex.getReason() : status.getReasonPhrase()));
+    }
+
+    @ExceptionHandler(ErrorResponseException.class)
+    public ResponseEntity<ApiResponse<Void>> handleErrorResponse(ErrorResponseException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        return ResponseEntity.status(status)
+                .body(ApiResponses.fail(status, ex.getBody().getDetail() != null ? ex.getBody().getDetail() : status.getReasonPhrase()));
+    }
+
+    // Thrown when an SSE client disconnects mid-stream. Do not log as ERROR,
+    // and do not wrap in a 500 response (the response is already closed).
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncClientGone(AsyncRequestNotUsableException ex) {
+        log.debug("[SSE] Client disconnected: {}", ex.getMessage());
+    }
+
+    // Thrown when an SSE / long-polling endpoint times out waiting for a
+    // DeferredResult. The response is already committed with
+    // Content-Type: text/event-stream, so attempting to return an
+    // ApiResponse JSON body triggers a secondary HttpMessageNotWritableException.
+    // Return a void response — the client simply sees the stream close,
+    // reconnects, and we stop spamming ERROR logs on every idle timeout.
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    public void handleAsyncTimeout(AsyncRequestTimeoutException ex) {
+        log.debug("[SSE] Request timed out (client should auto-reconnect)");
+    }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiResponse<Void>> handleDb(DataAccessException ex) {

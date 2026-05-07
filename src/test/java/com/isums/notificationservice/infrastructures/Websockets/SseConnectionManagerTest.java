@@ -53,4 +53,24 @@ class SseConnectionManagerTest {
         assertThat(e1).isNotSameAs(e2);
         manager.push(recipientId, notif(recipientId));
     }
+
+    @Test
+    @DisplayName("heartbeat removes emitters that can no longer be written")
+    void heartbeatRemovesFailedEmitter() {
+        UUID recipientId = UUID.randomUUID();
+        manager.subscribe(recipientId, new FailingEmitter());
+
+        assertThat(manager.connectionCount(recipientId)).isEqualTo(1);
+
+        manager.sendHeartbeats();
+
+        assertThat(manager.connectionCount(recipientId)).isZero();
+    }
+
+    private static final class FailingEmitter extends SseEmitter {
+        @Override
+        public void send(SseEventBuilder builder) throws IOException {
+            throw new IOException("closed");
+        }
+    }
 }
