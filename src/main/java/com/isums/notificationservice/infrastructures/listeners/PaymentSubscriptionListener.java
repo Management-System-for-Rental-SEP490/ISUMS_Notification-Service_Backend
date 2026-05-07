@@ -54,6 +54,12 @@ public class PaymentSubscriptionListener {
                 ack.acknowledge();
                 return;
             }
+            if (event.houseId() == null) {
+                log.error("[SubscriptionActivated] missing houseId messageId={} userId={} — cannot activate per-house PREMIUM, skip",
+                        messageId, event.userId());
+                ack.acknowledge();
+                return;
+            }
 
             // Defensive defaults: Payment-Service guarantees durationDays in
             // the new shape, but a redelivery from before the schema change
@@ -87,16 +93,15 @@ public class PaymentSubscriptionListener {
             }
 
             if (voiceQuota >= 0 && smsQuota >= 0) {
-                subscriptionService.activatePremiumByDays(event.userId(), days, voiceQuota, smsQuota);
+                subscriptionService.activatePremiumByDays(event.userId(), event.houseId(), days, voiceQuota, smsQuota);
             } else {
-                // Legacy / missing plan path — service uses TierQuotaPolicy.
-                subscriptionService.activatePremiumByDays(event.userId(), days);
+                subscriptionService.activatePremiumByDays(event.userId(), event.houseId(), days);
             }
             idempotencyService.markProcessed(messageId);
             ack.acknowledge();
 
-            log.info("[SubscriptionActivated] user={} plan={} days={} voice={} sms={} txnRef={}",
-                    event.userId(), event.planCode(), days, voiceQuota, smsQuota, event.txnRef());
+            log.info("[SubscriptionActivated] user={} house={} plan={} days={} voice={} sms={} txnRef={}",
+                    event.userId(), event.houseId(), event.planCode(), days, voiceQuota, smsQuota, event.txnRef());
         } catch (Exception e) {
             log.error("[SubscriptionActivated] failed messageId={}: {}",
                     messageId, e.getMessage(), e);

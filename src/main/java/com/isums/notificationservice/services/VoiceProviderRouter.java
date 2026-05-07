@@ -7,43 +7,44 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Picks a {@link VoiceProvider} based on
- * {@code app.notification.voice.provider} (default {@code STRINGEE}).
- * Stringee handles BOTH voice and SMS now — provider abstraction is
- * kept so swapping vendors later only touches this router.
- *
- * <p>Routing is per-request, not per-bean — flip the property without
- * a restart and the next dispatch picks up the new provider.
- */
 @Component
 @Slf4j
 public class VoiceProviderRouter {
 
     private final List<VoiceProvider> providers;
+    private final NotificationRuntimeSettingService settingService;
 
     @Value("${app.notification.voice.provider:STRINGEE}")
-    private String defaultProvider;
+    private String fallbackProvider;
 
-    public VoiceProviderRouter(List<VoiceProvider> providers) {
+    public VoiceProviderRouter(List<VoiceProvider> providers,
+                                NotificationRuntimeSettingService settingService) {
         this.providers = providers;
+        this.settingService = settingService;
     }
 
     @jakarta.annotation.PostConstruct
     void logConfig() {
-        log.info("[VoiceProviderRouter] default={} available={}",
-                defaultProvider,
+        log.info("[VoiceProviderRouter] fallback={} available={}",
+                fallbackProvider,
                 providers.stream().map(VoiceProvider::providerId).toList());
     }
 
-    /** The voice provider for outbound TTS calls. */
     public VoiceProvider voice() {
-        return resolve(defaultProvider);
+        return resolve(activeProviderId());
     }
 
-    /** The SMS provider — currently the same Stringee bean. */
     public VoiceProvider sms() {
-        return resolve(defaultProvider);
+        return resolve(activeProviderId());
+    }
+
+    public List<String> availableProviderIds() {
+        return providers.stream().map(VoiceProvider::providerId).toList();
+    }
+
+    public String activeProviderId() {
+        return settingService.getOrDefault(
+                NotificationRuntimeSettingService.KEY_VOICE_PROVIDER, fallbackProvider);
     }
 
     private VoiceProvider resolve(String id) {

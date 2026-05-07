@@ -36,10 +36,10 @@ public class PremiumExpirationScheduler {
 
         for (NotificationSubscription sub : expired) {
             try {
-                subscriptionService.downgradeToFree(sub.getUserId());
+                subscriptionService.downgradeToFree(sub.getUserId(), sub.getHouseId());
             } catch (Exception e) {
-                log.error("[PremiumExpire] failed userId={}: {}",
-                        sub.getUserId(), e.getMessage(), e);
+                log.error("[PremiumExpire] failed userId={} houseId={}: {}",
+                        sub.getUserId(), sub.getHouseId(), e.getMessage(), e);
             }
         }
     }

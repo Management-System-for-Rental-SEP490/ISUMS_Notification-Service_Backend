@@ -101,12 +101,10 @@ public class VoiceWebhookHandler {
     private void applyDtmf(VoiceCallJob job, String dtmf) {
         switch (dtmf.trim()) {
             case "1" -> {
-                // Explicit acknowledgement — stop retries.
                 job.setAcknowledgedAt(Instant.now());
                 job.setStatus(VoiceCallStatus.ACKNOWLEDGED);
             }
             case "2" -> {
-                // User explicitly asked to forward to landlord/manager.
                 UserNotificationPreferences prefs = prefsRepo.findById(job.getUserId()).orElse(null);
                 if (prefs == null) {
                     log.warn("[Webhook] escalation requested but no prefs for userId={}", job.getUserId());
@@ -115,7 +113,7 @@ public class VoiceWebhookHandler {
                 UUID target = escalationService.resolveEscalationTarget(
                         job.getUserId(), prefs, job.getHouseId());
                 if (target == null) {
-                    log.warn("[Webhook] escalation requested but no target for userId={}", job.getUserId());
+                    log.warn("[Webhook] escalation requested but no manager target for userId={}", job.getUserId());
                     return;
                 }
                 escalationService.record(job.getId(), null, target, EscalationReason.DTMF_KEY_2);
@@ -142,7 +140,15 @@ public class VoiceWebhookHandler {
 
     private void scheduleRetryOrEscalate(VoiceCallJob job) {
         UserNotificationPreferences prefs = prefsRepo.findById(job.getUserId()).orElse(null);
-        NotificationSubscription sub      = subsRepo.findById(job.getUserId()).orElse(null);
+        NotificationSubscription sub = null;
+        if (job.getHouseId() != null && !job.getHouseId().isBlank()) {
+            try {
+                sub = subsRepo.findByUserIdAndHouseId(job.getUserId(), java.util.UUID.fromString(job.getHouseId()))
+                        .orElse(null);
+            } catch (IllegalArgumentException ignored) {
+                sub = null;
+            }
+        }
 
         // Tier downgrade mid-retry: stop bothering — the user is no longer
         // paying for voice. Already-used quota is a sunk cost.

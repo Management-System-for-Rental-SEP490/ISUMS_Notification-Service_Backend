@@ -86,6 +86,7 @@ dependencies {
     // phone-number verification, then auto-promoted out of Sandbox once
     // AWS approves the production access request).
     implementation 'software.amazon.awssdk:sns'
+    implementation 'software.amazon.awssdk:pinpointsmsvoicev2'
     // Stringee REST API JWT auth (HS256 signing). nimbus-jose-jwt already
     // pulled by spring-boot-starter-oauth2-resource-server, but pin here
     // for clarity.

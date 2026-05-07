@@ -14,6 +14,10 @@ public interface ManagerNotificationService {
               String title, String body,
               String actionUrl, Map<String, String> metadata);
 
+    void send(UUID recipientId, NotificationCategory category,
+              String title, String body, String sourceLang,
+              String actionUrl, Map<String, String> metadata);
+
     Page<NotificationDto> getByRecipient(UUID recipientId, Pageable pageable);
 
     long countUnread(UUID recipientId);

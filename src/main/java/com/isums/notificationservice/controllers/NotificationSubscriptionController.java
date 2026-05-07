@@ -33,7 +33,7 @@ public class NotificationSubscriptionController {
     @PreAuthorize("hasAnyRole('LANDLORD', 'SYSTEM_ADMIN')")
     public ResponseEntity<ApiResponse<SubscriptionDto>> adminGrant(
             @RequestBody AdminGrantRequest req) {
-        var sub = subscriptionService.activatePremium(req.userId(), req.months());
+        var sub = subscriptionService.activatePremium(req.userId(), req.houseId(), req.months());
         return ResponseEntity.ok(ApiResponses.ok(
                 subscriptionService.toDto(sub), "Premium granted"));
     }
@@ -42,9 +42,10 @@ public class NotificationSubscriptionController {
     @PreAuthorize("hasAnyRole('LANDLORD', 'SYSTEM_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> adminDowngrade(
             @RequestBody DowngradeRequest req) {
-        subscriptionService.downgradeToFree(req.userId());
+        subscriptionService.downgradeToFree(req.userId(), req.houseId());
         return ResponseEntity.ok(ApiResponses.ok(
-                Map.of("userId", req.userId(), "tier", "FREE"), "Downgraded"));
+                Map.of("userId", req.userId(), "houseId", req.houseId(), "tier", "FREE"),
+                "Downgraded"));
     }
 
     /**
@@ -70,7 +71,7 @@ public class NotificationSubscriptionController {
                 "Payment intent created"));
     }
 
-    public record AdminGrantRequest(UUID userId, int months) {}
-    public record DowngradeRequest(UUID userId) {}
+    public record AdminGrantRequest(UUID userId, UUID houseId, int months) {}
+    public record DowngradeRequest(UUID userId, UUID houseId) {}
     public record UpgradeRequest(int months) {}
 }

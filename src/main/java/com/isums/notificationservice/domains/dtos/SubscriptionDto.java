@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record SubscriptionDto(
         UUID userId,
+        UUID houseId,
         SubscriptionTier tier,
         Instant premiumStartedAt,
         Instant premiumUntil,

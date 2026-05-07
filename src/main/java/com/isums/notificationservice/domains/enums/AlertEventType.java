@@ -12,10 +12,10 @@ public enum AlertEventType {
     // Critical — safety / immediate action
     GAS_CRITICAL,           // MQ2 over 300 ppm
     FIRE_CRITICAL,          // temperature > 55°C
-    POWER_LOST,             // controller reports PZEM outage
     WATER_LEAK_SUSPECTED,   // > 10 min continuous flow
 
     // Warning — attention needed but not immediate
+    POWER_LOST,             // controller reports PZEM outage — email-only to avoid SMS cost
     GAS_WARNING,
     TEMPERATURE_HIGH,
     HUMIDITY_HIGH,
@@ -49,7 +49,7 @@ public enum AlertEventType {
      */
     public AlertSeverity severity() {
         return switch (this) {
-            case GAS_CRITICAL, FIRE_CRITICAL, POWER_LOST, WATER_LEAK_SUSPECTED,
+            case GAS_CRITICAL, FIRE_CRITICAL, WATER_LEAK_SUSPECTED,
                  UTILITY_ELECTRICITY_CRITICAL, UTILITY_WATER_CRITICAL -> AlertSeverity.CRITICAL;
             case POWER_RESTORED -> AlertSeverity.INFO;
             default -> AlertSeverity.WARNING;

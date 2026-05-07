@@ -44,46 +44,43 @@ public class NotificationQuotaService {
         return ttl == null || ttl < 0 ? 0 : ttl;
     }
 
-    /** Returns true + increments; false if the monthly quota is already used up. */
     @Transactional
-    public boolean tryConsumeVoiceQuota(UUID userId) {
-        NotificationSubscription sub = subsRepo.findById(userId).orElse(null);
+    public boolean tryConsumeVoiceQuota(UUID userId, UUID houseId) {
+        if (houseId == null) return false;
+        NotificationSubscription sub = subsRepo.findByUserIdAndHouseId(userId, houseId).orElse(null);
         if (sub == null) return false;
 
         int quota = sub.getVoiceQuotaMonthly();
         if (quota <= 0) return false;
 
         String month = MONTH_KEY.format(Instant.now());
-        String key = "notif:voice:quota:" + userId + ":" + month;
+        String key = "notif:voice:quota:" + userId + ":" + houseId + ":" + month;
 
         Long used = redis.opsForValue().increment(key);
         if (used == null) return false;
 
-        // First time this month — set a 40-day expiry so it auto-clears.
         if (used == 1L) {
             redis.expire(key, Duration.ofDays(40));
         }
 
         if (used > quota) {
-            // Over cap — decrement to avoid drift then reject.
             redis.opsForValue().decrement(key);
-            log.info("[Quota] voice quota exceeded userId={} used={}/{}", userId, used - 1, quota);
+            log.info("[Quota] voice quota exceeded userId={} houseId={} used={}/{}",
+                    userId, houseId, used - 1, quota);
             return false;
         }
 
-        // Mirror into Postgres best-effort. A crash before commit means the
-        // DB counter lags Redis by one — acceptable; nightly reconciler
-        // can recover if needed.
         sub.setVoiceUsedThisMonth(used.intValue());
         subsRepo.save(sub);
         return true;
     }
 
     @Transactional
-    public void refundVoiceQuota(UUID userId) {
+    public void refundVoiceQuota(UUID userId, UUID houseId) {
+        if (houseId == null) return;
         String month = MONTH_KEY.format(Instant.now());
-        redis.opsForValue().decrement("notif:voice:quota:" + userId + ":" + month);
-        subsRepo.findById(userId).ifPresent(sub -> {
+        redis.opsForValue().decrement("notif:voice:quota:" + userId + ":" + houseId + ":" + month);
+        subsRepo.findByUserIdAndHouseId(userId, houseId).ifPresent(sub -> {
             if (sub.getVoiceUsedThisMonth() > 0) {
                 sub.setVoiceUsedThisMonth(sub.getVoiceUsedThisMonth() - 1);
                 subsRepo.save(sub);
@@ -105,9 +102,10 @@ public class NotificationQuotaService {
         log.info("[Quota] monthly reset complete, rows={}", updated);
     }
 
-    public int readVoiceUsedThisMonth(UUID userId) {
+    public int readVoiceUsedThisMonth(UUID userId, UUID houseId) {
+        if (houseId == null) return 0;
         String month = MONTH_KEY.format(Instant.now());
-        String v = redis.opsForValue().get("notif:voice:quota:" + userId + ":" + month);
+        String v = redis.opsForValue().get("notif:voice:quota:" + userId + ":" + houseId + ":" + month);
         try {
             return v == null ? 0 : Integer.parseInt(v);
         } catch (NumberFormatException e) {

@@ -16,11 +16,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@IdClass(NotificationSubscriptionId.class)
 public class NotificationSubscription {
 
     @Id
     @Column(name = "user_id", columnDefinition = "uuid")
     private UUID userId;
+
+    @Id
+    @Column(name = "house_id", columnDefinition = "uuid")
+    private UUID houseId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

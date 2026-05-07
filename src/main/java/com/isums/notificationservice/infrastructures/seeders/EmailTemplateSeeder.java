@@ -1933,6 +1933,42 @@ public class EmailTemplateSeeder {
                                         ⏰ Hạn thanh toán: <strong>{{dueDate}}</strong>
                                       </div>
                                     </div>
+                                    {{#paymentUrl}}
+                                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                                      <tr>
+                                        <td style="padding-right:10px;">
+                                          <a href="{{paymentUrl}}"
+                                             style="display:inline-block;background:linear-gradient(135deg,#b45309 0%,#f59e0b 100%);
+                                                    color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;
+                                                    font-size:15px;font-weight:700;padding:14px 26px;border-radius:10px;
+                                                    letter-spacing:.2px;box-shadow:0 4px 14px -2px rgba(180,83,9,.45);">
+                                            💳 Thanh toán ngay
+                                          </a>
+                                        </td>
+                                        {{#appDeepLink}}
+                                        <td>
+                                          <a href="{{appDeepLink}}"
+                                             style="display:inline-block;color:#92400e;text-decoration:none;font-family:Arial,sans-serif;
+                                                    font-size:14px;font-weight:600;padding:13px 18px;border-radius:10px;
+                                                    border:1px solid #fbbf24;background:#fffbeb;">
+                                            Mở trên ứng dụng →
+                                          </a>
+                                        </td>
+                                        {{/appDeepLink}}
+                                      </tr>
+                                    </table>
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;margin-top:14px;line-height:1.7;">
+                                      Nếu nút không hoạt động, copy link sau vào trình duyệt:<br>
+                                      <span style="word-break:break-all;color:#b45309;">{{paymentUrl}}</span>
+                                    </div>
+                                    {{/paymentUrl}}
+                                    {{^paymentUrl}}
+                                    <div style="margin-top:24px;padding:14px 20px;background:#fffbeb;border-radius:10px;border:1px dashed #fbbf24;">
+                                      <div style="font-family:Arial,sans-serif;font-size:13px;color:#92400e;line-height:1.7;">
+                                        Mở ứng dụng ISUMS → mục <strong>Hợp đồng</strong> → <strong>Hợp đồng #{{contractId}}</strong> để thanh toán phần chênh lệch.
+                                      </div>
+                                    </div>
+                                    {{/paymentUrl}}
                                     <hr style="border:none;border-top:1px solid #f3f4f6;margin:28px 0 20px;">
                                     <div style="font-family:Arial,sans-serif;font-size:13px;color:#9ca3af;">
                                       Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
@@ -1956,8 +1992,10 @@ public class EmailTemplateSeeder {
                         Cọc gốc: {{originalAmount}}
                         Đã chuyển: {{transferredAmount}}
                         Cần nộp thêm: {{additionalAmount}} (hạn {{dueDate}}).
+                        {{#paymentUrl}}Thanh toán: {{paymentUrl}}{{/paymentUrl}}
+                        {{#appDeepLink}}Mở trên ứng dụng: {{appDeepLink}}{{/appDeepLink}}
                         """,
-                List.of("contractId", "originalAmount", "transferredAmount", "additionalAmount", "dueDate"),
+                List.of("contractId", "originalAmount", "transferredAmount", "additionalAmount", "dueDate", "paymentUrl", "appDeepLink"),
                 "system"
         );
 

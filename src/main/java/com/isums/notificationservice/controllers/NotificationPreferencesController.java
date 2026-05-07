@@ -84,19 +84,21 @@ public class NotificationPreferencesController {
 
     @GetMapping("/me/subscription")
     public ResponseEntity<ApiResponse<SubscriptionDto>> getMySubscription(
-            @AuthenticationPrincipal Jwt jwt) {
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("houseId") UUID houseId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         SubscriptionDto dto = subscriptionService.toDto(
-                preferenceService.getSubscriptionOrCreate(userId));
+                preferenceService.getSubscriptionOrCreate(userId, houseId));
         return ResponseEntity.ok(ApiResponses.ok(dto, "OK"));
     }
 
     @GetMapping("/me/quota")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMyQuota(
-            @AuthenticationPrincipal Jwt jwt) {
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("houseId") UUID houseId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         SubscriptionDto sub = subscriptionService.toDto(
-                preferenceService.getSubscriptionOrCreate(userId));
+                preferenceService.getSubscriptionOrCreate(userId, houseId));
         long cooldown = quotaService.remainingRateLimitSec(userId);
         Map<String, Object> body = Map.of(
                 "tier", sub.tier(),

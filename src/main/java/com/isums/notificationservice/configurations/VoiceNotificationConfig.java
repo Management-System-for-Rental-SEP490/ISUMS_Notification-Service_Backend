@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.pinpointsmsvoicev2.PinpointSmsVoiceV2Client;
 import software.amazon.awssdk.services.polly.PollyClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -53,6 +54,16 @@ public class VoiceNotificationConfig {
     public S3Client voiceAudioS3Client() {
         return S3Client.builder()
                 .region(Region.of(awsRegion))
+                .build();
+    }
+
+    @Value("${app.notification.aws.voice.region:us-east-1}")
+    private String pinpointVoiceRegion;
+
+    @Bean
+    public PinpointSmsVoiceV2Client pinpointSmsVoiceV2Client() {
+        return PinpointSmsVoiceV2Client.builder()
+                .region(Region.of(pinpointVoiceRegion))
                 .build();
     }
 

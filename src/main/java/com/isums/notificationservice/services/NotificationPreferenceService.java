@@ -57,24 +57,36 @@ public class NotificationPreferenceService {
                 });
     }
 
+    public SubscriptionTier resolveEffectiveTier(UUID userId) {
+        Instant now = Instant.now();
+        return subsRepo.findAllByUserId(userId).stream()
+                .anyMatch(s -> s.getTier() == SubscriptionTier.PREMIUM
+                        && s.getPremiumUntil() != null
+                        && s.getPremiumUntil().isAfter(now))
+                ? SubscriptionTier.PREMIUM
+                : SubscriptionTier.FREE;
+    }
+
     @Transactional
-    public NotificationSubscription getSubscriptionOrCreate(UUID userId) {
-        return subsRepo.findById(userId)
+    public NotificationSubscription getSubscriptionOrCreate(UUID userId, UUID houseId) {
+        if (houseId == null) {
+            throw new IllegalArgumentException("houseId is required");
+        }
+        return subsRepo.findByUserIdAndHouseId(userId, houseId)
                 .orElseGet(() -> {
                     try {
                         return subsRepo.saveAndFlush(
                                 NotificationSubscription.builder()
                                         .userId(userId)
+                                        .houseId(houseId)
                                         .tier(SubscriptionTier.FREE)
                                         .voiceQuotaMonthly(TierQuotaPolicy.voiceQuotaFor(SubscriptionTier.FREE))
                                         .smsQuotaMonthly(TierQuotaPolicy.smsQuotaFor(SubscriptionTier.FREE))
                                         .build());
                     } catch (DataIntegrityViolationException race) {
-                        // Same race-condition guard as getOrCreate above —
-                        // duplicate-pkey on user_id means another tx beat us
-                        // to it; just read the row that's now there.
-                        log.debug("[Sub] race on getSubscriptionOrCreate userId={} — re-reading", userId);
-                        return subsRepo.findById(userId)
+                        log.debug("[Sub] race on getSubscriptionOrCreate userId={} houseId={} — re-reading",
+                                userId, houseId);
+                        return subsRepo.findByUserIdAndHouseId(userId, houseId)
                                 .orElseThrow(() -> race);
                     }
                 });
@@ -103,7 +115,13 @@ public class NotificationPreferenceService {
                                                 String clientIp,
                                                 String userAgent) {
         UserNotificationPreferences p = getOrCreate(userId);
-        NotificationSubscription sub = getSubscriptionOrCreate(userId);
+        SubscriptionTier effectiveTier = resolveEffectiveTier(userId);
+        NotificationSubscription sub = NotificationSubscription.builder()
+                .userId(userId)
+                .tier(effectiveTier)
+                .voiceQuotaMonthly(TierQuotaPolicy.voiceQuotaFor(effectiveTier))
+                .smsQuotaMonthly(TierQuotaPolicy.smsQuotaFor(effectiveTier))
+                .build();
 
         if (req.language() != null)                    p.setLanguage(req.language());
         if (req.emailEnabled() != null)                p.setEmailEnabled(req.emailEnabled());

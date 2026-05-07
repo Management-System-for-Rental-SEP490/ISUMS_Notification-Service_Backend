@@ -18,6 +18,7 @@ import java.util.UUID;
 public record PaymentSubscriptionActivatedEvent(
         String  intentId,
         UUID    userId,
+        UUID    houseId,
         String  purpose,
         Integer durationDays,
         String  planCode,

@@ -35,18 +35,31 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
     private String sourceLanguage = "en";
 
     @Override
-    @Transactional
     public void send(UUID recipientId, NotificationCategory category,
                      String title, String body,
                      String actionUrl, Map<String, String> metadata) {
+        send(recipientId, category, title, body, sourceLanguage, actionUrl, metadata);
+    }
+
+    @Override
+    @Transactional
+    public void send(UUID recipientId, NotificationCategory category,
+                     String title, String body, String sourceLang,
+                     String actionUrl, Map<String, String> metadata) {
+
+        String resolvedLang = TranslationMap.normalizeLanguage(sourceLang);
+        if (resolvedLang == null || resolvedLang.isBlank()) {
+            resolvedLang = TranslationMap.normalizeLanguage(sourceLanguage);
+        }
+        if (resolvedLang == null || resolvedLang.isBlank()) resolvedLang = "en";
 
         ManagerNotification n = ManagerNotification.builder()
                 .recipientId(recipientId)
                 .category(category)
                 .title(title)
-                .titleTranslations(sourceMap(title))
+                .titleTranslations(sourceMap(title, resolvedLang))
                 .body(body)
-                .bodyTranslations(sourceMap(body))
+                .bodyTranslations(sourceMap(body, resolvedLang))
                 .actionUrl(actionUrl)
                 .metadata(metadata)
                 .isRead(false)
@@ -54,18 +67,17 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
 
         repo.save(n);
         sseManager.push(recipientId, n);
-        translationRequester.requestMissing(n, sourceLanguage);
+        translationRequester.requestMissing(n, resolvedLang);
 
-        log.info("[Notification] Sent recipientId={} category={}", recipientId, category);
+        log.info("[Notification] Sent recipientId={} category={} sourceLang={}",
+                recipientId, category, resolvedLang);
     }
 
-    private TranslationMap sourceMap(String text) {
-        String code = TranslationMap.normalizeLanguage(sourceLanguage);
-        if (code == null || code.isBlank()) code = "en";
+    private TranslationMap sourceMap(String text, String lang) {
         if (text == null || text.isBlank()) return TranslationMap.empty();
         Map<String, String> source = new LinkedHashMap<>();
-        source.put(code, text);
-        source.put("_source", code);
+        source.put(lang, text);
+        source.put("_source", lang);
         return new TranslationMap(source);
     }
 

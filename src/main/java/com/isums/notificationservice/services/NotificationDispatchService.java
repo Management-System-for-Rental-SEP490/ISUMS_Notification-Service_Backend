@@ -210,7 +210,28 @@ public class NotificationDispatchService {
         }
 
         UserNotificationPreferences prefs = preferenceService.getOrCreate(keycloakUuid);
-        NotificationSubscription sub = preferenceService.getSubscriptionOrCreate(keycloakUuid);
+        NotificationSubscription sub;
+        if (nonBlank(req.houseId())) {
+            try {
+                UUID houseUuid = UUID.fromString(req.houseId());
+                sub = preferenceService.getSubscriptionOrCreate(keycloakUuid, houseUuid);
+            } catch (IllegalArgumentException e) {
+                log.warn("[Dispatch] invalid houseId={} for subscription lookup, using FREE tier", req.houseId());
+                sub = NotificationSubscription.builder()
+                        .userId(keycloakUuid)
+                        .tier(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE)
+                        .voiceQuotaMonthly(TierQuotaPolicy.voiceQuotaFor(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE))
+                        .smsQuotaMonthly(TierQuotaPolicy.smsQuotaFor(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE))
+                        .build();
+            }
+        } else {
+            sub = NotificationSubscription.builder()
+                    .userId(keycloakUuid)
+                    .tier(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE)
+                    .voiceQuotaMonthly(TierQuotaPolicy.voiceQuotaFor(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE))
+                    .smsQuotaMonthly(TierQuotaPolicy.smsQuotaFor(com.isums.notificationservice.domains.enums.SubscriptionTier.FREE))
+                    .build();
+        }
 
         // Locale resolution: User-Service profile language is the system-wide
         // source of truth. Notification prefs used to carry a separate language,
@@ -379,8 +400,16 @@ public class NotificationDispatchService {
         // manager subscription row (tier=FREE, quota=0) silently swallows
         // every escalation call → user complaint "manager's phone never
         // rings". Tenant path still gates on quota above the tier check.
+        UUID dispatchHouseUuid = null;
+        if (nonBlank(req.houseId())) {
+            try {
+                dispatchHouseUuid = UUID.fromString(req.houseId());
+            } catch (IllegalArgumentException ignored) {
+                dispatchHouseUuid = null;
+            }
+        }
         if (role == RecipientRole.TENANT
-                && !quotaService.tryConsumeVoiceQuota(keycloakUuid)) {
+                && !quotaService.tryConsumeVoiceQuota(keycloakUuid, dispatchHouseUuid)) {
             return new ChannelDispatchResult(prefix + "VOICE", "SKIPPED",
                     "monthly_quota_exceeded", null);
         }
@@ -394,10 +423,8 @@ public class NotificationDispatchService {
                     keycloakUuid, user.getPhoneNumber(), effectivePrefs, req, vars, role, reason);
             return new ChannelDispatchResult(prefix + "VOICE", "SENT", null, job.getId());
         } catch (Exception e) {
-            // Only refund if we actually consumed (TENANT path). Non-TENANT
-            // bypassed the quota debit so refund would underflow the row.
             if (role == RecipientRole.TENANT) {
-                quotaService.refundVoiceQuota(keycloakUuid);
+                quotaService.refundVoiceQuota(keycloakUuid, dispatchHouseUuid);
             }
             log.error("[Dispatch] {}voice dispatch failed userId={}: {}",
                     prefix, keycloakUuid, e.getMessage(), e);

@@ -40,12 +40,12 @@ public record ChannelPolicy(
                 case MANAGER  -> new ChannelPolicy(true, true, true, true);
             };
             case WARNING -> switch (role) {
-                // Tenant: voice + SMS for actionable warnings when the user opted in.
-                case TENANT   -> new ChannelPolicy(true, true, true, true);
+                // Tenant: in-app push + email only — no SMS / voice cost on warnings
+                case TENANT   -> new ChannelPolicy(true, true, false, false);
                 // Landlord: email only (no SMS noise)
                 case LANDLORD -> new ChannelPolicy(false, true, false, false);
-                // Manager: SMS + push + email; voice reserved for CRITICAL
-                case MANAGER  -> new ChannelPolicy(true, true, true, false);
+                // Manager: in-app push + email only — SMS/voice reserved for CRITICAL
+                case MANAGER  -> new ChannelPolicy(true, true, false, false);
             };
             case INFO -> switch (role) {
                 // Tenant: lightweight push + email

@@ -67,6 +67,7 @@ public class ContractEventListener {
                         "Hợp đồng #" + event.getContractId().toString().substring(0, 8).toUpperCase()
                                 + " của khách thuê " + event.getTenantName()
                                 + " đã hết hạn. Đã phân công nhân viên đi kiểm tra.",
+                        "vi",
                         "/contracts/" + event.getContractId() + "/termination",
                         metadata
                 );
@@ -100,6 +101,7 @@ public class ContractEventListener {
                     "Nhân viên đã kiểm tra xong hợp đồng #"
                             + event.getContractId().toString().substring(0, 8).toUpperCase()
                             + ". Vui lòng xem lại và xác nhận số tiền cọc hoàn lại.",
+                    "vi",
                     "/contracts/" + event.getContractId() + "/deposit-refund",
                     Map.of(
                             "contractId", event.getContractId().toString(),
@@ -154,6 +156,7 @@ public class ContractEventListener {
                     NotificationCategory.CONTRACT_READY_FOR_LANDLORD_SIGNATURE,
                     "Khách thuê đã xác nhận CCCD",
                     "Hợp đồng " + contractLabel + " của " + tenantLabel + " đã sẵn sàng để chủ nhà ký.",
+                    "vi",
                     "/contracts/" + event.getContractId(),
                     metadata
             );
@@ -211,6 +214,7 @@ public class ContractEventListener {
                         NotificationCategory.CONTRACT_COMPLETED,
                         "Hợp đồng được ký thành công",
                         "Người thuê nhà " + tenantLabel + " đã hoàn tất việc ký hợp đồng " + contractLabel + ".",
+                        "vi",
                         "/contracts/" + event.getContractId(),
                         metadata
                 );
@@ -269,6 +273,7 @@ public class ContractEventListener {
                         "Khách thuê đã huỷ ký hợp đồng",
                         "Khách thuê " + tenantLabel + " đã huỷ ký hợp đồng #"
                                 + event.getContractId().toString().substring(0, 8).toUpperCase() + ".",
+                        "vi",
                         "/contracts/" + event.getContractId(),
                         metadata
                 );
