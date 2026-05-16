@@ -15,6 +15,8 @@ import java.util.UUID;
 public class ConfirmAndSendToTenantEvent {
     private String messageId;
     private UUID recipientUserId;
+    private String recipientEmail;
+    private String recipientName;
     private UUID contractId;
     private String contractName;
     private String url;

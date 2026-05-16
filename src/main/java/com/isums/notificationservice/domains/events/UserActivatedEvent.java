@@ -16,6 +16,7 @@ public record UserActivatedEvent(
         String email,
         String name,
         String password,
+        String locale,
         String firstRentPaymentUrl,
         Long firstRentAmount,
         Instant firstRentDueDate

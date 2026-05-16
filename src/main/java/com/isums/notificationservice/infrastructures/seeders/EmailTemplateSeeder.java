@@ -278,6 +278,87 @@ public class EmailTemplateSeeder {
 
         upsertActiveV1(
                 templateRepo, versionRepo,
+                "econtract_ready_for_landlord_signature",
+                "CONTRACT",
+                "MANAGER",
+                LocaleType.vi_VN,
+                "Khách thuê đã xác nhận hợp đồng {{contractNo}}",
+                """
+                        <!doctype html>
+                        <html lang="vi">
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width,initial-scale=1">
+                          <title>Hợp đồng sẵn sàng để chủ nhà ký</title>
+                        </head>
+                        <body style="margin:0;padding:0;background:#f6f7fb;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb;padding:24px 12px;">
+                            <tr>
+                              <td align="center">
+                                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                       style="width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(18,38,63,.08);">
+                                  <tr>
+                                    <td style="padding:20px 24px;background:#0b5cff;color:#ffffff;">
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1.2;">
+                                        ISUMS • Hợp đồng thuê nhà
+                                      </div>
+                                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;opacity:.9;margin-top:6px;">
+                                        Khách thuê đã xác nhận, chờ chủ nhà ký
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding:24px;font-family:Arial,Helvetica,sans-serif;color:#344054;">
+                                      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">
+                                        Xin chào <strong>{{recipientName}}</strong>,
+                                      </p>
+                                      <p style="margin:0 0 16px;font-size:14px;line-height:1.7;">
+                                        Khách thuê <strong>{{tenantName}}</strong> đã xác nhận thông tin cho hợp đồng
+                                        <strong>{{contractName}}</strong>. Hợp đồng hiện đã sẵn sàng để chủ nhà ký.
+                                      </p>
+                                      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+                                        <tr>
+                                          <td style="background:#0b5cff;border-radius:10px;">
+                                            <a href="{{actionUrl}}"
+                                               style="display:inline-block;padding:12px 18px;font-family:Arial,Helvetica,sans-serif;
+                                                      font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">
+                                              Mở hợp đồng
+                                            </a>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                      <p style="margin:18px 0 0;font-size:12px;color:#667085;line-height:1.6;">
+                                        Nếu nút không hoạt động, hãy sao chép liên kết sau vào trình duyệt:<br>
+                                        <a href="{{actionUrl}}" style="color:#0b5cff;word-break:break-all;">{{actionUrl}}</a>
+                                      </p>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding:16px 24px;background:#fafafa;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#98a2b3;">
+                                      Email này được gửi tự động. Vui lòng không trả lời trực tiếp email này.
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                """
+                        Xin chào {{recipientName}},
+
+                        Khách thuê {{tenantName}} đã xác nhận thông tin cho hợp đồng {{contractName}}.
+                        Hợp đồng hiện đã sẵn sàng để chủ nhà ký.
+
+                        Mở hợp đồng: {{actionUrl}}
+                        """,
+                List.of("recipientName", "tenantName", "contractName", "contractNo", "actionUrl"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
                 "econtract_view_confirm",
                 "CONTRACT",
                 "TENANT",
@@ -1723,6 +1804,79 @@ public class EmailTemplateSeeder {
         );
 
         upsertActiveV1(templateRepo, versionRepo,
+                "late_payment_final_notice", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "THÔNG BÁO CUỐI: Hóa đơn quá hạn {{daysLate}} ngày — Hợp đồng sắp bị chấm dứt",
+                """
+                        <!doctype html><html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#fef2f2;">
+                          <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:12px;overflow:hidden;
+                                            box-shadow:0 4px 12px rgba(220,38,38,0.15);">
+                                <tr><td style="padding:28px 32px;background:linear-gradient(135deg,#991b1b 0%,#dc2626 100%);">
+                                  <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                                              color:#fecaca;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">
+                                    ISUMS · Thông báo bắt buộc
+                                  </div>
+                                  <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;color:#fff;">
+                                    ⚠️ Thông báo cuối — Hợp đồng sắp bị chấm dứt
+                                  </div>
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;">
+                                  <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.7;">
+                                    Hóa đơn tiền thuê của bạn đã quá hạn <strong>{{daysLate}} ngày</strong>
+                                    (từ {{dueDate}}). Tổng số tiền cần thanh toán:
+                                    <strong style="color:#dc2626;">{{totalAmount}}</strong>.
+                                  </p>
+                                  <div style="margin:20px 0;padding:14px 18px;background:#fef2f2;
+                                              border-left:3px solid #dc2626;border-radius:6px;">
+                                    <p style="font-family:Arial,sans-serif;font-size:14px;color:#991b1b;
+                                              line-height:1.7;margin:0;font-weight:600;">
+                                      Theo điều khoản hợp đồng và Luật Nhà ở 2023 (Điều 172),
+                                      chủ nhà sẽ tiến hành thủ tục chấm dứt hợp đồng và thu hồi nhà
+                                      do vi phạm nghĩa vụ thanh toán.
+                                    </p>
+                                  </div>
+                                  <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;
+                                            line-height:1.7;">
+                                    Khi hợp đồng chấm dứt:
+                                  </p>
+                                  <ul style="font-family:Arial,sans-serif;font-size:14px;color:#374151;
+                                             line-height:1.8;margin:0;padding-left:20px;">
+                                    <li>Tiền cọc sẽ bị giữ lại để bù trừ tiền thuê chưa thanh toán</li>
+                                    <li>Bạn phải bàn giao nhà theo lịch của bộ phận quản lý</li>
+                                    <li>Quyền truy cập app và dịch vụ sẽ bị ngừng vĩnh viễn</li>
+                                  </ul>
+                                  <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;
+                                            line-height:1.7;margin-top:20px;">
+                                    <strong>Để tránh chấm dứt hợp đồng, vui lòng thanh toán ngay
+                                    trong vòng 24 giờ tới.</strong>
+                                  </p>
+                                  <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0 16px;">
+                                  <div style="font-family:Arial,sans-serif;font-size:12px;color:#9ca3af;">
+                                    Trân trọng,<br><strong style="color:#374151;">Đội ngũ ISUMS</strong>
+                                  </div>
+                                </td></tr>
+                                <tr><td style="padding:14px 32px;background:#f9fafb;">
+                                  <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                                    Đây là thông báo cuối được gửi tự động trước khi tiến hành chấm dứt hợp đồng.
+                                  </div>
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                "THÔNG BÁO CUỐI: Hóa đơn quá hạn {{daysLate}} ngày từ {{dueDate}}.\n"
+                        + "Tổng tiền: {{totalAmount}}.\n"
+                        + "Hợp đồng sẽ bị chấm dứt nếu không thanh toán trong 24 giờ tới. "
+                        + "Tiền cọc sẽ bị giữ lại để bù trừ.",
+                List.of("totalAmount", "dueDate", "daysLate"),
+                "system"
+        );
+
+        upsertActiveV1(templateRepo, versionRepo,
                 "power_cut_warning_24h", "PAYMENT", "TENANT", LocaleType.vi_VN,
                 "Cảnh báo: Điện sẽ bị cắt sau 24 giờ do chưa thanh toán tiền thuê",
                 """
@@ -2077,6 +2231,228 @@ public class EmailTemplateSeeder {
                         Hoàn lại: {{refundAmount}} qua {{refundMethod}}.
                         """,
                 List.of("contractId", "originalAmount", "transferredAmount", "refundAmount", "refundMethod"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_first_month_covered", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Tiền thuê tháng đầu đã được khấu trừ — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#f0fdf4;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr><td style="padding:28px 32px;background:#15803d;color:#fff;font-family:Arial,sans-serif;font-size:22px;font-weight:700;">
+                                  Tiền thuê tháng đầu đã được khấu trừ
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                  Hợp đồng <strong>#{{contractId}}</strong> đã được dùng phần tiền đã thanh toán trước đó để khấu trừ tiền thuê tháng đầu.
+                                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;background:#f9fafb;border-radius:10px;">
+                                    <tr><td style="padding:12px 16px;">Tiền thuê tháng đầu: <strong>{{rentAmount}}</strong></td></tr>
+                                    <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Đã khấu trừ: <strong>{{creditAmount}}</strong></td></tr>
+                                  </table>
+                                  <p style="margin-top:20px;">Bạn không cần thanh toán thêm cho khoản này.</p>
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Hợp đồng #{{contractId}}: tiền thuê tháng đầu {{rentAmount}} đã được khấu trừ {{creditAmount}}.
+                        Bạn không cần thanh toán thêm cho khoản này.
+                        """,
+                List.of("contractId", "rentAmount", "creditAmount", "billableAmount"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_first_month_partial_credit", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Cần thanh toán thêm tiền thuê tháng đầu — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#fffbeb;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr><td style="padding:28px 32px;background:#b45309;color:#fff;font-family:Arial,sans-serif;font-size:22px;font-weight:700;">
+                                  Cần thanh toán thêm tiền thuê tháng đầu
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                  Hợp đồng <strong>#{{contractId}}</strong> đã được khấu trừ một phần tiền thuê tháng đầu.
+                                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;background:#f9fafb;border-radius:10px;">
+                                    <tr><td style="padding:12px 16px;">Tiền thuê tháng đầu: <strong>{{rentAmount}}</strong></td></tr>
+                                    <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Đã khấu trừ: <strong>{{creditAmount}}</strong></td></tr>
+                                    <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Cần thanh toán thêm: <strong>{{billableAmount}}</strong></td></tr>
+                                  </table>
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Hợp đồng #{{contractId}}: tiền thuê tháng đầu {{rentAmount}}, đã khấu trừ {{creditAmount}}, cần thanh toán thêm {{billableAmount}}.
+                        """,
+                List.of("contractId", "rentAmount", "creditAmount", "billableAmount"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_first_month_refund_due", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Phát sinh tiền cần hoàn sau khi đổi nhà — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#eff6ff;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr><td style="padding:28px 32px;background:#1d4ed8;color:#fff;font-family:Arial,sans-serif;font-size:22px;font-weight:700;">
+                                  Cần hoàn phần tiền dư
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                  Sau khi chuyển tiền từ hợp đồng cũ <strong>#{{oldContractId}}</strong> sang hợp đồng mới
+                                  <strong>#{{contractId}}</strong>, hệ thống ghi nhận phần dư cần hoàn là
+                                  <strong>{{excessAmount}}</strong>.
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Hợp đồng mới #{{contractId}} từ hợp đồng cũ #{{oldContractId}} có phần dư cần hoàn: {{excessAmount}}.
+                        """,
+                List.of("contractId", "oldContractId", "excessAmount"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "contract_deposit_expired_tenant_invoice", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Hết hạn thanh toán tiền cọc — Hợp đồng #{{contractNo}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#fef2f2;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr><td style="padding:28px 32px;background:#b91c1c;color:#fff;font-family:Arial,sans-serif;font-size:22px;font-weight:700;">
+                                  Tiền cọc đã quá hạn
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                  Xin chào {{tenantName}}, khoản cọc của hợp đồng <strong>#{{contractNo}}</strong>
+                                  đã quá hạn thanh toán vào <strong>{{deadline}}</strong>.
+                                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;background:#f9fafb;border-radius:10px;">
+                                    <tr><td style="padding:12px 16px;">Số tiền cọc: <strong>{{depositAmount}}</strong></td></tr>
+                                  </table>
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Xin chào {{tenantName}},
+                        Tiền cọc hợp đồng #{{contractNo}} số tiền {{depositAmount}} đã quá hạn vào {{deadline}}.
+                        """,
+                List.of("tenantName", "contractNo", "depositAmount", "deadline"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "deposit_refund_notify", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Thông báo hoàn tiền cọc {{refundAmount}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#eff6ff;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr><td style="padding:28px 32px;background:#1d4ed8;color:#fff;font-family:Arial,sans-serif;font-size:22px;font-weight:700;">
+                                  Thông báo hoàn tiền cọc
+                                </td></tr>
+                                <tr><td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                  Khoản hoàn tiền cọc <strong>{{refundAmount}}</strong> đã được ghi nhận.
+                                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;background:#f9fafb;border-radius:10px;">
+                                    <tr><td style="padding:12px 16px;">Hạn xử lý: <strong>{{dueDate}}</strong></td></tr>
+                                    <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Ghi chú: {{note}}</td></tr>
+                                  </table>
+                                </td></tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Khoản hoàn tiền cọc {{refundAmount}} đã được ghi nhận. Hạn xử lý: {{dueDate}}. Ghi chú: {{note}}.
+                        """,
+                List.of("refundAmount", "note", "dueDate"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
+                "deposit_refund_paid_notify", "PAYMENT", "TENANT", LocaleType.vi_VN,
+                "Đã hoàn tiền cọc {{refundAmount}} — Hợp đồng #{{contractId}}",
+                """
+                        <!doctype html>
+                        <html lang="vi"><head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#f0fdf4;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+                                <tr>
+                                  <td style="padding:28px 32px;background:#15803d;color:#fff;font-family:Arial,sans-serif;">
+                                    <div style="font-size:13px;opacity:.9;">ISUMS • Hoàn cọc</div>
+                                    <div style="font-size:24px;font-weight:700;margin-top:6px;">Đã hoàn tiền cọc</div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:28px 32px;font-family:Arial,sans-serif;color:#374151;font-size:15px;line-height:1.7;">
+                                    Xin chào <strong>{{tenantName}}</strong>, khoản hoàn tiền cọc cho hợp đồng
+                                    <strong>#{{contractId}}</strong> đã được xác nhận thanh toán.
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                           style="margin-top:20px;background:#f9fafb;border-radius:10px;">
+                                      <tr><td style="padding:12px 16px;">Số tiền hoàn: <strong>{{refundAmount}}</strong></td></tr>
+                                      <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Phương thức: <strong>{{paymentMethod}}</strong></td></tr>
+                                      <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Thời gian xác nhận: <strong>{{paidAt}}</strong></td></tr>
+                                      <tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;">Ghi chú: {{note}}</td></tr>
+                                    </table>
+                                    <p style="margin-top:18px;color:#667085;font-size:13px;">
+                                      Nếu chưa nhận được tiền, vui lòng liên hệ bộ phận quản lý để được kiểm tra giao dịch.
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body></html>
+                        """,
+                """
+                        Xin chào {{tenantName}},
+                        Khoản hoàn tiền cọc {{refundAmount}} cho hợp đồng #{{contractId}} đã được xác nhận thanh toán.
+                        Phương thức: {{paymentMethod}}
+                        Thời gian xác nhận: {{paidAt}}
+                        Ghi chú: {{note}}
+                        """,
+                List.of("tenantName", "contractId", "refundAmount", "paymentMethod", "paidAt", "note"),
                 "system"
         );
 

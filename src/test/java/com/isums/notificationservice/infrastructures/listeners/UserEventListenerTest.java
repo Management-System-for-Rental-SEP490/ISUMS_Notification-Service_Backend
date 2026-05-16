@@ -180,5 +180,96 @@ class UserEventListenerTest {
             verify(ack).acknowledge();
             verifyNoInteractions(emailService);
         }
+
+        @Test
+        @DisplayName("uses en_US locale when event.locale is en_US (foreign tenant English)")
+        void englishLocale() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("john@example.com").name("John")
+                    .password("Tmp@123")
+                    .locale("en_US")
+                    .firstRentPaymentUrl("https://pay.example/1")
+                    .firstRentAmount(10_000_000L)
+                    .firstRentDueDate(Instant.now().plusSeconds(86400))
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated(rec, ack);
+
+            verify(emailService).sendEmail(eq("john@example.com"), eq("user_activated"),
+                    eq(LocaleType.en_US), any());
+            verify(ack).acknowledge();
+        }
+
+        @Test
+        @DisplayName("uses ja_JP locale when event.locale is ja_JP (foreign tenant Japanese)")
+        void japaneseLocale() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("yamada@example.jp").name("Yamada")
+                    .password("Tmp@123")
+                    .locale("ja_JP")
+                    .firstRentPaymentUrl("https://pay.example/1")
+                    .firstRentAmount(10_000_000L)
+                    .firstRentDueDate(Instant.now().plusSeconds(86400))
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated(rec, ack);
+
+            verify(emailService).sendEmail(eq("yamada@example.jp"), eq("user_activated"),
+                    eq(LocaleType.ja_JP), any());
+            verify(ack).acknowledge();
+        }
+
+        @Test
+        @DisplayName("falls back to vi_VN when event.locale is null (legacy events)")
+        void nullLocaleFallsBackToViVn() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("legacy@example.com").name("Legacy")
+                    .password("Tmp@123")
+                    .firstRentPaymentUrl("https://pay.example/1")
+                    .firstRentAmount(10_000_000L)
+                    .firstRentDueDate(Instant.now().plusSeconds(86400))
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated(rec, ack);
+
+            verify(emailService).sendEmail(eq("legacy@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), any());
+            verify(ack).acknowledge();
+        }
+
+        @Test
+        @DisplayName("falls back to vi_VN when event.locale is unrecognised garbage")
+        void invalidLocaleFallsBackToViVn() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("garbage@example.com").name("Garbage")
+                    .password("Tmp@123")
+                    .locale("xx_YY")
+                    .firstRentPaymentUrl("https://pay.example/1")
+                    .firstRentAmount(10_000_000L)
+                    .firstRentDueDate(Instant.now().plusSeconds(86400))
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated(rec, ack);
+
+            verify(emailService).sendEmail(eq("garbage@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), any());
+            verify(ack).acknowledge();
+        }
     }
 }

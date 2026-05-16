@@ -4,10 +4,15 @@ import com.isums.notificationservice.domains.enums.NotificationCategory;
 import com.isums.notificationservice.domains.events.ContractCancelledByTenantEvent;
 import com.isums.notificationservice.domains.events.ContractCompletedEvent;
 import com.isums.notificationservice.domains.events.ContractReadyForLandlordSignatureEvent;
+import com.isums.notificationservice.domains.events.DepositRefundConfirmedEvent;
 import com.isums.notificationservice.domains.events.InspectionDoneNotifyEvent;
 import com.isums.notificationservice.domains.events.InspectionScheduledEvent;
+import com.isums.notificationservice.domains.enums.LocaleType;
+import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import com.isums.notificationservice.infrastructures.abstracts.ManagerNotificationService;
+import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.notificationservice.services.NotificationRecipientResolver;
+import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
 import common.kafkas.KafkaListenerHelper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -43,6 +48,8 @@ import static org.mockito.Mockito.when;
 class ContractEventListenerTest {
 
     @Mock private ManagerNotificationService notificationService;
+    @Mock private EmailService emailService;
+    @Mock private UserGrpcClient userGrpcClient;
     @Mock private NotificationRecipientResolver recipientResolver;
     @Mock private ObjectMapper objectMapper;
     @Mock private IdempotencyService idempotencyService;
@@ -76,7 +83,7 @@ class ContractEventListenerTest {
 
             ArgumentCaptor<NotificationCategory> cap = ArgumentCaptor.forClass(NotificationCategory.class);
             verify(notificationService, times(2)).send(any(UUID.class), cap.capture(),
-                    anyString(), anyString(), anyString(), any(Map.class));
+                    anyString(), anyString(), anyString(), anyString(), any(Map.class));
             assertThat(cap.getAllValues()).containsOnly(NotificationCategory.CONTRACT_EXPIRED);
             verify(ack).acknowledge();
         }
@@ -127,7 +134,7 @@ class ContractEventListenerTest {
 
             verify(notificationService).send(eq(event.getManagerId()),
                     eq(NotificationCategory.INSPECTION_DONE),
-                    anyString(), anyString(), anyString(), any(Map.class));
+                    anyString(), anyString(), anyString(), anyString(), any(Map.class));
             verify(ack).acknowledge();
         }
     }
@@ -140,22 +147,32 @@ class ContractEventListenerTest {
                 new ConsumerRecord<>("contract.ready-for-landlord-signature", 0, 0L, "k", "v");
 
         @Test
-        @DisplayName("sends CONTRACT_READY_FOR_LANDLORD_SIGNATURE notification on happy path")
+        @DisplayName("sends realtime and email to landlord and manager on happy path")
         void happy() throws Exception {
             when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
             when(idempotencyService.isDuplicate("m1")).thenReturn(false);
 
+            UUID houseId = UUID.randomUUID();
+            UUID createdBy = UUID.randomUUID();
+            UUID landlordId = UUID.randomUUID();
+            UUID managerId = UUID.randomUUID();
             ContractReadyForLandlordSignatureEvent event = new ContractReadyForLandlordSignatureEvent(
-                    "m1", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                    "m1", UUID.randomUUID(), houseId, createdBy, UUID.randomUUID(),
                     "Alice", "Lease April", "doc-123");
             when(objectMapper.readValue("v", ContractReadyForLandlordSignatureEvent.class)).thenReturn(event);
+            when(recipientResolver.resolveLandlordAndManager(houseId, createdBy))
+                    .thenReturn(List.of(landlordId, managerId, createdBy));
+            when(userGrpcClient.getUserById(landlordId)).thenReturn(user("landlord@example.com", "Landlord"));
+            when(userGrpcClient.getUserById(managerId)).thenReturn(user("manager@example.com", "Manager"));
+            when(userGrpcClient.getUserById(createdBy)).thenReturn(user("creator@example.com", "Creator"));
 
             listener.handleReadyForLandlordSignature(rec, ack);
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
-            verify(notificationService).send(
-                    eq(event.getRecipientUserId()),
+            verify(notificationService, times(3)).send(
+                    any(UUID.class),
                     eq(NotificationCategory.CONTRACT_READY_FOR_LANDLORD_SIGNATURE),
+                    anyString(),
                     anyString(),
                     anyString(),
                     eq("/contracts/" + event.getContractId()),
@@ -164,10 +181,23 @@ class ContractEventListenerTest {
             assertThat(metadataCap.getValue())
                     .containsEntry("contractId", event.getContractId().toString())
                     .containsEntry("tenantId", event.getTenantId().toString())
+                    .containsEntry("houseId", houseId.toString())
                     .containsEntry("documentId", "doc-123")
                     .containsEntry("status", "READY");
+            verify(emailService, times(3)).sendEmail(
+                    anyString(),
+                    eq("econtract_ready_for_landlord_signature"),
+                    eq(LocaleType.vi_VN),
+                    any(Map.class));
             verify(ack).acknowledge();
         }
+    }
+
+    private UserResponse user(String email, String name) {
+        return UserResponse.newBuilder()
+                .setEmail(email)
+                .setName(name)
+                .build();
     }
 
     @Nested
@@ -217,6 +247,7 @@ class ContractEventListenerTest {
                     eq(NotificationCategory.CONTRACT_COMPLETED),
                     anyString(),
                     anyString(),
+                    anyString(),
                     eq("/contracts/" + contractId),
                     metadataCap.capture()
             );
@@ -227,6 +258,51 @@ class ContractEventListenerTest {
                     .containsEntry("status", "COMPLETED")
                     .containsEntry("completedAt", completedAt.toString())
                     .containsEntry("signedPdfUrl", "https://signed-pdf");
+            verify(ack).acknowledge();
+        }
+    }
+
+    @Nested
+    @DisplayName("handleDepositRefundConfirmed")
+    class DepositRefundConfirmed {
+
+        private final ConsumerRecord<String, String> rec =
+                new ConsumerRecord<>("contract.deposit-refund.confirmed", 0, 0L, "k", "v");
+
+        @Test
+        @DisplayName("sends DEPOSIT_REFUND_CONFIRM notification to landlord and manager")
+        void happy() throws Exception {
+            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
+            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+
+            UUID contractId = UUID.randomUUID();
+            UUID houseId = UUID.randomUUID();
+            UUID landlordId = UUID.randomUUID();
+            UUID managerId = UUID.randomUUID();
+            DepositRefundConfirmedEvent event = DepositRefundConfirmedEvent.builder()
+                    .contractId(contractId)
+                    .houseId(houseId)
+                    .tenantId(UUID.randomUUID())
+                    .tenantEmail("alice@example.com")
+                    .refundAmount(2_000_000L)
+                    .note("ok")
+                    .messageId("m1")
+                    .build();
+            when(objectMapper.readValue("v", DepositRefundConfirmedEvent.class)).thenReturn(event);
+            when(recipientResolver.resolveLandlordAndManager(houseId))
+                    .thenReturn(List.of(landlordId, managerId));
+
+            listener.handleDepositRefundConfirmed(rec, ack);
+
+            verify(notificationService, times(2)).send(
+                    any(UUID.class),
+                    eq(NotificationCategory.DEPOSIT_REFUND_CONFIRM),
+                    anyString(),
+                    anyString(),
+                    anyString(),
+                    eq("/contracts/" + contractId + "/deposit-refund"),
+                    any(Map.class)
+            );
             verify(ack).acknowledge();
         }
     }
@@ -273,6 +349,7 @@ class ContractEventListenerTest {
             verify(notificationService, times(2)).send(
                     any(UUID.class),
                     eq(NotificationCategory.CONTRACT_CANCELLED_BY_TENANT),
+                    anyString(),
                     anyString(),
                     anyString(),
                     eq("/contracts/" + contractId),

@@ -2,6 +2,7 @@ package com.isums.notificationservice.infrastructures.listeners;
 
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.domains.events.DepositPaidEvent;
+import com.isums.notificationservice.domains.events.DepositRefundPaidEvent;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.userservice.grpc.UserResponse;
@@ -128,5 +129,31 @@ class PaymentEventListenerTest {
         assertThatThrownBy(() -> listener.handlePaymentPaid(rec, ack))
                 .isInstanceOf(RuntimeException.class);
         verify(ack, never()).acknowledge();
+    }
+
+    @Test
+    @DisplayName("sends deposit_refund_paid_notify email when refund is marked paid")
+    void depositRefundPaid() throws Exception {
+        ConsumerRecord<String, String> refundRec =
+                new ConsumerRecord<>("deposit-refund-paid-topic", 0, 0L, "k", "v");
+        when(kafkaHelper.extractMessageId(refundRec)).thenReturn("m2");
+        when(idempotencyService.isDuplicate("m2")).thenReturn(false);
+        DepositRefundPaidEvent evt = DepositRefundPaidEvent.builder()
+                .contractId(UUID.randomUUID())
+                .tenantId(UUID.randomUUID())
+                .tenantEmail("alice@example.com")
+                .refundAmount(2_000_000L)
+                .paymentMethod("BANK_TRANSFER")
+                .note("done")
+                .paidAt(Instant.now())
+                .messageId("m2")
+                .build();
+        when(objectMapper.readValue("v", DepositRefundPaidEvent.class)).thenReturn(evt);
+
+        listener.handleDepositRefundPaid(refundRec, ack);
+
+        verify(emailService).sendEmail(eq("alice@example.com"), eq("deposit_refund_paid_notify"),
+                eq(LocaleType.vi_VN), any());
+        verify(ack).acknowledge();
     }
 }
