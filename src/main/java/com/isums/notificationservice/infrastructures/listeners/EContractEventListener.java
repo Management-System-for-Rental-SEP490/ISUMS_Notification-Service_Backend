@@ -42,12 +42,25 @@ public class EContractEventListener {
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
     public void handleConfirmAndSendToTenant(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+        log.info("[EContract] >>> ENTRY topic={} partition={} offset={} key={} valueLen={}",
+                record.topic(), record.partition(), record.offset(),
+                record.key(), record.value() != null ? record.value().length() : 0);
+        String messageId;
+        try {
+            messageId = kafkaHelper.extractMessageId(record);
+            kafkaHelper.setupMDC(record, messageId);
+            log.info("[EContract] >>> after MDC setup messageId={}", messageId);
+        } catch (Throwable t) {
+            log.error("[EContract] >>> setup failed: {}", t.toString(), t);
+            ack.acknowledge();
+            return;
+        }
 
         try {
             ConfirmAndSendToTenantEvent event = objectMapper.readValue(
                     record.value(), ConfirmAndSendToTenantEvent.class);
+            log.info("[EContract] >>> deserialized contractId={} email={}",
+                    event.getContractId(), event.getRecipientEmail());
             if (event.getMessageId() != null) messageId = event.getMessageId();
 
             if (idempotencyService.isDuplicate(messageId)) {
