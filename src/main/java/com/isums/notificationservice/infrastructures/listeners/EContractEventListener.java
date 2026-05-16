@@ -1,29 +1,16 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
-import com.isums.notificationservice.domains.events.RenewalReminderEvent;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-import com.isums.notificationservice.domains.events.ConfirmAndSendToTenantEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
-import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
-import com.isums.userservice.grpc.UserResponse;
-import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -31,244 +18,58 @@ import java.util.Map;
 public class EContractEventListener {
 
     private final EmailService emailService;
-    private final UserGrpcClient userGrpcClient;
-    private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
-    private final ObjectMapper objectMapper;
 
-    private static final DateTimeFormatter DMY = DateTimeFormatter
-            .ofPattern("dd/MM/yyyy")
-            .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("\"recipientEmail\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern NAME_PATTERN = Pattern.compile("\"recipientName\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern URL_PATTERN = Pattern.compile("\"url\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern CONFIRM_URL_PATTERN = Pattern.compile("\"confirmUrl\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern CONTRACT_NAME_PATTERN = Pattern.compile("\"contractName\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern CONTRACT_ID_PATTERN = Pattern.compile("\"contractId\"\\s*:\\s*\"([^\"]+)\"");
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
-    public void handleConfirmAndSendToTenant(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        log.error("[EContract] >>> ENTRY topic={} part={} offset={} valLen={} hasKafkaHelper={} hasObjectMapper={} hasIdempotency={}",
-                record.topic(), record.partition(), record.offset(),
-                record.value() != null ? record.value().length() : -1,
-                kafkaHelper != null, objectMapper != null, idempotencyService != null);
-        String messageId;
+    public void handleConfirmAndSendToTenant(String payload) {
+        log.error("[EContract] >>> ENTRY len={}", payload != null ? payload.length() : -1);
         try {
-            messageId = kafkaHelper.extractMessageId(record);
-            kafkaHelper.setupMDC(record, messageId);
-            log.error("[EContract] >>> AFTER_MDC messageId={}", messageId);
-        } catch (Throwable t) {
-            log.error("[EContract] >>> SETUP_FAILED: {}", t.toString(), t);
-            ack.acknowledge();
-            return;
-        }
-
-        try {
-            ConfirmAndSendToTenantEvent event = objectMapper.readValue(
-                    record.value(), ConfirmAndSendToTenantEvent.class);
-            log.error("[EContract] >>> DESERIALIZED contractId={} email={}",
-                    event.getContractId(), event.getRecipientEmail());
-            if (event.getMessageId() != null) messageId = event.getMessageId();
-
-            if (idempotencyService.isDuplicate(messageId)) {
-                log.warn("[EContract] Duplicate skipped messageId={}", messageId);
-                ack.acknowledge();
+            if (payload == null) {
+                log.error("[EContract] null payload");
                 return;
             }
+            String email = extract(payload, EMAIL_PATTERN);
+            String name = extract(payload, NAME_PATTERN);
+            String url = extract(payload, URL_PATTERN);
+            String confirmUrl = extract(payload, CONFIRM_URL_PATTERN);
+            String contractName = extract(payload, CONTRACT_NAME_PATTERN);
+            String contractId = extract(payload, CONTRACT_ID_PATTERN);
 
-            String recipientEmail = safe(event.getRecipientEmail(), null);
-            String recipientName = safe(event.getRecipientName(), null);
-            if ((recipientEmail == null || recipientEmail.isBlank()) && event.getRecipientUserId() == null) {
-                log.error("[EContract] recipientUserId and recipientEmail null, skip. contractId={}",
-                        event.getContractId());
-                ack.acknowledge();
+            log.error("[EContract] >>> PARSED email={} contractId={}", email, contractId);
+
+            if (email == null || email.isBlank()) {
+                log.error("[EContract] no recipientEmail in payload");
                 return;
             }
-            if (event.getUrl() == null || event.getUrl().isBlank()) {
-                log.error("[EContract] url null/blank, skip. contractId={}", event.getContractId());
-                ack.acknowledge();
-                return;
-            }
-
-            if ((recipientEmail == null || recipientEmail.isBlank()) && event.getRecipientUserId() != null) {
-                try {
-                    UserResponse user = userGrpcClient.getUserById(event.getRecipientUserId());
-                    if (user != null) {
-                        recipientEmail = safe(user.getEmail(), null);
-                        recipientName = safe(user.getName(), recipientName);
-                    }
-                } catch (StatusRuntimeException e) {
-                    if (isPermanentGrpcFailure(e)) {
-                        log.warn("[EContract] User lookup failed code={} userId={} contractId={}, using event email fallback: {}",
-                                e.getStatus().getCode(), event.getRecipientUserId(), event.getContractId(), e.getMessage());
-                        if (recipientEmail == null || recipientEmail.isBlank()) {
-                            throw new IllegalStateException(
-                                    "Recipient user not available yet and event has no email; retry later. userId="
-                                            + event.getRecipientUserId());
-                        }
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-            if (recipientEmail == null || recipientEmail.isBlank()) {
-                log.error("[EContract] recipientEmail unavailable, skip. userId={} contractId={}",
-                        event.getRecipientUserId(), event.getContractId());
-                idempotencyService.markProcessed(messageId);
-                ack.acknowledge();
-                return;
-            }
-
-            LocaleType locale = mapLocale(event.getContractLanguage());
 
             Map<String, Object> vars = new HashMap<>();
-            vars.put("tenantName", safe(recipientName, fallbackTenantName(locale)));
-            vars.put("contractName", safe(event.getContractName(), fallbackContractName(locale)));
-            vars.put("contractNo", shortId(event.getContractId()));
+            vars.put("tenantName", name != null ? name : "bạn");
+            vars.put("landlordName", "Chủ nhà");
+            vars.put("contractNo", contractId != null && contractId.length() >= 8
+                    ? contractId.substring(0, 8).toUpperCase() : "N/A");
+            vars.put("contractName", contractName != null ? contractName : "Hợp đồng thuê nhà");
             vars.put("propertyAddress", "N/A");
-            vars.put("startDate", formatDate(event.getStartDate()));
-            vars.put("endDate", formatDate(event.getEndDate()));
-            vars.put("viewUrl", event.getUrl());
-            vars.put("confirmUrl", safe(event.getConfirmUrl(), event.getUrl()));
-            vars.put("expiresIn", expiresIn(locale));
-            vars.put("landlordName", fallbackLandlordName(locale));
+            vars.put("startDate", "N/A");
+            vars.put("endDate", "N/A");
+            vars.put("viewUrl", url != null ? url : "#");
+            vars.put("confirmUrl", confirmUrl != null ? confirmUrl : (url != null ? url : "#"));
+            vars.put("expiresIn", "24 giờ");
 
-            emailService.sendEmail(recipientEmail, "econtract_view_confirm", locale, vars);
-
-            idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
-
-            log.info("[EContract] Email sent messageId={} to={} contractId={}",
-                    messageId, recipientEmail, event.getContractId());
-
-        } catch (JacksonException e) {
-            log.error("[EContract] Deserialization failed messageId={} raw={}: {}",
-                    messageId, record.value(), e.getMessage());
-            ack.acknowledge();
-        } catch (StatusRuntimeException e) {
-            if (isPermanentGrpcFailure(e)) {
-                log.warn("[EContract] Permanent gRPC failure code={} messageId={}: {} — ack and skip",
-                        e.getStatus().getCode(), messageId, e.getMessage());
-                idempotencyService.markProcessed(messageId);
-                ack.acknowledge();
-            } else {
-                log.error("[EContract] Transient gRPC failure code={} messageId={}, will retry: {}",
-                        e.getStatus().getCode(), messageId, e.getMessage());
-                throw e;
-            }
-        } catch (Exception e) {
-            log.error("[EContract] Processing failed messageId={}, will retry: {}",
-                    messageId, e.getMessage(), e);
-            throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
+            emailService.sendEmail(email, "econtract_view_confirm", LocaleType.vi_VN, vars);
+            log.error("[EContract] >>> EMAIL SENT to={}", email);
+        } catch (Throwable t) {
+            log.error("[EContract] >>> FAILED: {}", t.toString(), t);
         }
     }
 
-    private static boolean isPermanentGrpcFailure(StatusRuntimeException e) {
-        Status.Code code = e.getStatus().getCode();
-        return code == Status.Code.NOT_FOUND
-                || code == Status.Code.INVALID_ARGUMENT
-                || code == Status.Code.PERMISSION_DENIED
-                || code == Status.Code.UNAUTHENTICATED
-                || code == Status.Code.FAILED_PRECONDITION;
-    }
-
-    @KafkaListener(topics = "contract.renewal.reminder", groupId = "notification-group")
-    public void handleRenewalReminder(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
-
-        String messageId = kafkaHelper.extractMessageId(record);
-        try {
-            if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
-                return;
-            }
-
-            RenewalReminderEvent event = objectMapper.readValue(record.value(), RenewalReminderEvent.class);
-
-            UserResponse tenant = userGrpcClient.getUserById(event.getTenantId());
-
-            emailService.sendEmail(
-                    tenant.getEmail(),
-                    "contract_renewal_reminder",
-                    LocaleType.vi_VN,
-                    Map.of(
-                            "tenantName", tenant.getName(),
-                            "contractId", event.getContractId().toString()
-                                    .substring(0, 8).toUpperCase(),
-                            "daysRemaining", String.valueOf(event.getDaysRemaining()),
-                            "endDate", DMY.format(event.getEndDate()),
-                            "openForNew", event.getDaysRemaining() == 0
-                    )
-            );
-
-            idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
-            log.info("[Notification] RenewalReminder sent tenantId={} daysRemaining={}",
-                    event.getTenantId(), event.getDaysRemaining());
-
-        } catch (StatusRuntimeException e) {
-            if (isPermanentGrpcFailure(e)) {
-                log.warn("[Notification] RenewalReminder permanent gRPC failure code={}: {} — ack and skip",
-                        e.getStatus().getCode(), e.getMessage());
-                idempotencyService.markProcessed(messageId);
-                ack.acknowledge();
-            } else {
-                log.error("[Notification] RenewalReminder transient gRPC failure code={}, will retry: {}",
-                        e.getStatus().getCode(), e.getMessage());
-                throw e;
-            }
-        } catch (Exception e) {
-            log.error("[Notification] handleRenewalReminder failed: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String safe(String s, String fallback) {
-        return (s != null && !s.isBlank()) ? s.trim() : fallback;
-    }
-
-    private String formatDate(Instant instant) {
-        return instant != null ? DMY.format(instant) : "N/A";
-    }
-
-    private String shortId(java.util.UUID id) {
-        return id != null ? id.toString().substring(0, 8).toUpperCase() : "N/A";
-    }
-
-    private static LocaleType mapLocale(String contractLanguage) {
-        if (contractLanguage == null) return LocaleType.vi_VN;
-        return switch (contractLanguage) {
-            case "VI_EN" -> LocaleType.en_US;
-            case "VI_JA" -> LocaleType.ja_JP;
-            default -> LocaleType.vi_VN;
-        };
-    }
-
-    private static String fallbackTenantName(LocaleType l) {
-        return switch (l) {
-            case en_US -> "you";
-            case ja_JP -> "お客様";
-            default -> "you";
-        };
-    }
-
-    private static String fallbackContractName(LocaleType l) {
-        return switch (l) {
-            case en_US -> "Lease contract";
-            case ja_JP -> "賃貸借契約";
-            default -> "House lease contract";
-        };
-    }
-
-    private static String fallbackLandlordName(LocaleType l) {
-        return switch (l) {
-            case en_US -> "Landlord";
-            case ja_JP -> "家主";
-            default -> "Landlord";
-        };
-    }
-
-    private static String expiresIn(LocaleType l) {
-        return switch (l) {
-            case en_US -> "24 hours";
-            case ja_JP -> "24時間";
-            default -> "24 hours";
-        };
+    private String extract(String payload, Pattern p) {
+        Matcher m = p.matcher(payload);
+        return m.find() ? m.group(1) : null;
     }
 }
