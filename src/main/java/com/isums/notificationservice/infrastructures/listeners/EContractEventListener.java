@@ -56,8 +56,11 @@ public class EContractEventListener {
                 return;
             }
 
-            if (event.getRecipientUserId() == null) {
-                log.error("[EContract] recipientUserId null, skip. contractId={}", event.getContractId());
+            String recipientEmail = safe(event.getRecipientEmail(), null);
+            String recipientName = safe(event.getRecipientName(), null);
+            if ((recipientEmail == null || recipientEmail.isBlank()) && event.getRecipientUserId() == null) {
+                log.error("[EContract] recipientUserId and recipientEmail null, skip. contractId={}",
+                        event.getContractId());
                 ack.acknowledge();
                 return;
             }
@@ -67,10 +70,31 @@ public class EContractEventListener {
                 return;
             }
 
-            UserResponse user = userGrpcClient.getUserById(event.getRecipientUserId());
-            if (user == null) {
-                log.error("[EContract] User not found userId={} contractId={}",
+            if ((recipientEmail == null || recipientEmail.isBlank()) && event.getRecipientUserId() != null) {
+                try {
+                    UserResponse user = userGrpcClient.getUserById(event.getRecipientUserId());
+                    if (user != null) {
+                        recipientEmail = safe(user.getEmail(), null);
+                        recipientName = safe(user.getName(), recipientName);
+                    }
+                } catch (StatusRuntimeException e) {
+                    if (isPermanentGrpcFailure(e)) {
+                        log.warn("[EContract] User lookup failed code={} userId={} contractId={}, using event email fallback: {}",
+                                e.getStatus().getCode(), event.getRecipientUserId(), event.getContractId(), e.getMessage());
+                        if (recipientEmail == null || recipientEmail.isBlank()) {
+                            throw new IllegalStateException(
+                                    "Recipient user not available yet and event has no email; retry later. userId="
+                                            + event.getRecipientUserId());
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            if (recipientEmail == null || recipientEmail.isBlank()) {
+                log.error("[EContract] recipientEmail unavailable, skip. userId={} contractId={}",
                         event.getRecipientUserId(), event.getContractId());
+                idempotencyService.markProcessed(messageId);
                 ack.acknowledge();
                 return;
             }
@@ -78,7 +102,7 @@ public class EContractEventListener {
             LocaleType locale = mapLocale(event.getContractLanguage());
 
             Map<String, Object> vars = new HashMap<>();
-            vars.put("tenantName", safe(user.getName(), fallbackTenantName(locale)));
+            vars.put("tenantName", safe(recipientName, fallbackTenantName(locale)));
             vars.put("contractName", safe(event.getContractName(), fallbackContractName(locale)));
             vars.put("contractNo", shortId(event.getContractId()));
             vars.put("propertyAddress", "N/A");
@@ -89,13 +113,13 @@ public class EContractEventListener {
             vars.put("expiresIn", expiresIn(locale));
             vars.put("landlordName", fallbackLandlordName(locale));
 
-            emailService.sendEmail(user.getEmail(), "econtract_view_confirm", locale, vars);
+            emailService.sendEmail(recipientEmail, "econtract_view_confirm", locale, vars);
 
             idempotencyService.markProcessed(messageId);
             ack.acknowledge();
 
             log.info("[EContract] Email sent messageId={} to={} contractId={}",
-                    messageId, user.getEmail(), event.getContractId());
+                    messageId, recipientEmail, event.getContractId());
 
         } catch (JacksonException e) {
             log.error("[EContract] Deserialization failed messageId={} raw={}: {}",

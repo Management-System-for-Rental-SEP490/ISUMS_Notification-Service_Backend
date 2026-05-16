@@ -54,7 +54,8 @@ public class UserEventListener {
                 return;
             }
 
-            emailService.sendEmail(event.to(), event.templateCode().toLowerCase(), LocaleType.vi_VN, event.params());
+            emailService.sendEmail(event.to(), event.templateCode().toLowerCase(), LocaleType.vi_VN,
+                    event.params() != null ? event.params() : Map.of());
 
             idempotencyService.markProcessed(messageId);
             ack.acknowledge();
@@ -102,7 +103,7 @@ public class UserEventListener {
                 params.put("invoicePaymentUrl", event.firstRentPaymentUrl());
             }
 
-            emailService.sendEmail(event.email(), "user_activated", LocaleType.vi_VN, params);
+            emailService.sendEmail(event.email(), "user_activated", resolveLocale(event.locale()), params);
 
             idempotencyService.markProcessed(messageId);
             ack.acknowledge();
@@ -122,5 +123,15 @@ public class UserEventListener {
     private String formatVnd(Long amount) {
         if (amount == null) return "0 ₫";
         return NumberFormat.getNumberInstance(Locale.of("vi", "VN")).format(amount) + " ₫";
+    }
+
+    private LocaleType resolveLocale(String raw) {
+        if (raw == null || raw.isBlank()) return LocaleType.vi_VN;
+        try {
+            return LocaleType.valueOf(raw.trim());
+        } catch (IllegalArgumentException ex) {
+            log.warn("[Notification] Unknown locale '{}' on user-activated event, falling back to vi_VN", raw);
+            return LocaleType.vi_VN;
+        }
     }
 }

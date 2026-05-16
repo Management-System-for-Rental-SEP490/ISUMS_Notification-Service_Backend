@@ -16,6 +16,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.MustacheFactory;
 
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -35,12 +36,24 @@ public class EmailServiceImpl implements EmailService {
     private String from;
 
     public void sendEmail(String to, String templateKey, LocaleType locale, Map<String, Object> vars) {
-        EmailTemplateCached tpl = templateService.getActive(templateKey, locale);
-        validateVars(tpl, vars);
+        Map<String, Object> safeVars = vars != null ? vars : Collections.emptyMap();
+        LocaleType effectiveLocale = locale != null ? locale : LocaleType.vi_VN;
+        EmailTemplateCached tpl;
+        try {
+            tpl = templateService.getActive(templateKey, effectiveLocale);
+        } catch (IllegalStateException missing) {
+            if (effectiveLocale == LocaleType.vi_VN) throw missing;
+            log.warn("email_template_missing templateKey={} locale={} — falling back to vi_VN",
+                    templateKey, effectiveLocale);
+            effectiveLocale = LocaleType.vi_VN;
+            tpl = templateService.getActive(templateKey, effectiveLocale);
+        }
+        final LocaleType usedLocale = effectiveLocale;
+        validateVars(tpl, safeVars);
 
-        String subject = render(tpl.subjectTpl(), vars);
-        String html = render(tpl.htmlTpl(), vars);
-        String text = (tpl.textTpl() == null) ? null : render(tpl.textTpl(), vars);
+        String subject = render(tpl.subjectTpl(), safeVars);
+        String html = render(tpl.htmlTpl(), safeVars);
+        String text = (tpl.textTpl() == null) ? null : render(tpl.textTpl(), safeVars);
 
         try {
             var msg = mailSender.createMimeMessage();
@@ -58,14 +71,14 @@ public class EmailServiceImpl implements EmailService {
             retried.run();
 
             log.info("email_sent templateKey={} locale={} version={} to={}",
-                    templateKey, locale, tpl.version(), to);
+                    templateKey, usedLocale, tpl.version(), to);
         } catch (MailException e) {
             log.error("email_send_failed templateKey={} locale={} to={} err={}",
-                    templateKey, locale, to, e.getMessage(), e);
+                    templateKey, usedLocale, to, e.getMessage(), e);
             throw e;
         } catch (Exception e) {
             log.error("email_build_or_send_failed templateKey={} locale={} to={} err={}",
-                    templateKey, locale, to, e.getMessage(), e);
+                    templateKey, usedLocale, to, e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }

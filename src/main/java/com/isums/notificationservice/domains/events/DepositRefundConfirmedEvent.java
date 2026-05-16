@@ -1,21 +1,22 @@
 package com.isums.notificationservice.domains.events;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContractReadyForLandlordSignatureEvent {
-    private String messageId;
+public class DepositRefundConfirmedEvent {
     private UUID contractId;
     private UUID houseId;
-    private UUID recipientUserId;
     private UUID tenantId;
-    private String tenantName;
-    private String contractName;
-    private String documentId;
+    private String tenantEmail;
+    private Long refundAmount;
+    private String note;
+    private String messageId;
 }
