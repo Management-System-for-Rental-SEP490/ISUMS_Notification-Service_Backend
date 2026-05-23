@@ -35,6 +35,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail.from}")
     private String from;
 
+    @Value("${app.mail.fromName:}")
+    private String fromName;
+
     public void sendEmail(String to, String templateKey, LocaleType locale, Map<String, Object> vars) {
         Map<String, Object> safeVars = vars != null ? vars : Collections.emptyMap();
         LocaleType effectiveLocale = locale != null ? locale : LocaleType.vi_VN;
@@ -58,7 +61,11 @@ public class EmailServiceImpl implements EmailService {
         try {
             var msg = mailSender.createMimeMessage();
             var h = new MimeMessageHelper(msg, true, UTF_8.name());
-            h.setFrom(from);
+            if (fromName != null && !fromName.isBlank()) {
+                h.setFrom(from, fromName);
+            } else {
+                h.setFrom(from);
+            }
             h.setTo(to);
             h.setSubject(subject);
             if (text != null) h.setText(text, html);
