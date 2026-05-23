@@ -17,8 +17,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.NumberFormat;
 import java.time.ZoneId;
@@ -42,19 +42,17 @@ public class PaymentEventListener {
             .ofPattern("dd/MM/yyyy HH:mm")
             .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
 
-    @KafkaListener(topics = "payment-paid-topic", groupId = "notification-group")
-    public void handlePaymentPaid(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
-
+    @KafkaListener(topics = "payment-paid-topic", groupId = "notification-group-v2",
+            properties = {"auto.offset.reset:earliest"})
+    public void handlePaymentPaid(String payload) {
+        log.info("[Payment] handlePaymentPaid ENTRY len={}",
+                payload != null ? payload.length() : -1);
         try {
-            if (idempotencyService.isDuplicate(messageId)) {
-                log.warn("[Payment] Duplicate skipped messageId={}", messageId);
-                ack.acknowledge();
+            if (payload == null) {
+                log.error("[Payment] handlePaymentPaid null payload, skipping");
                 return;
             }
-
-            DepositPaidEvent event = objectMapper.readValue(record.value(), DepositPaidEvent.class);
+            DepositPaidEvent event = objectMapper.readValue(payload, DepositPaidEvent.class);
 
             String recipientEmail = safe(event.tenantEmail(), null);
             String recipientName = "you";
@@ -81,8 +79,6 @@ public class PaymentEventListener {
             if (recipientEmail == null || recipientEmail.isBlank()) {
                 log.error("[Payment] Receipt email skipped, recipient unavailable tenantId={} invoiceId={}",
                         event.tenantId(), event.invoiceId());
-                idempotencyService.markProcessed(messageId);
-                ack.acknowledge();
                 return;
             }
 
@@ -95,25 +91,19 @@ public class PaymentEventListener {
 
             emailService.sendEmail(recipientEmail, "payment_receipt", LocaleType.vi_VN, vars);
 
-            idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
-
-            log.info("[Payment] Receipt email sent messageId={} to={} type={}",
-                    messageId, recipientEmail, event.invoiceType());
+            log.info("[Payment] Receipt email sent to={} type={}",
+                    recipientEmail, event.invoiceType());
 
         } catch (JacksonException e) {
-            log.error("[Payment] Deserialize failed messageId={}: {}", messageId, e.getMessage());
-            ack.acknowledge();
+            log.error("[Payment] Deserialize failed raw={}: {}", payload, e.getMessage());
         } catch (StatusRuntimeException e) {
-            log.error("[Payment] Transient gRPC failure code={} messageId={}, will retry: {}",
-                    e.getStatus().getCode(), messageId, e.getMessage());
+            log.error("[Payment] Transient gRPC failure code={}, will retry: {}",
+                    e.getStatus().getCode(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("[Payment] Processing failed messageId={}, will retry: {}",
-                    messageId, e.getMessage(), e);
+            log.error("[Payment] Processing failed, will retry: {}",
+                    e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 

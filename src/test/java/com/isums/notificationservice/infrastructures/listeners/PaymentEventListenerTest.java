@@ -16,8 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -59,66 +59,51 @@ class PaymentEventListenerTest {
     @Test
     @DisplayName("sends payment_receipt email on happy path")
     void happy() throws Exception {
-        when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-        when(idempotencyService.isDuplicate("m1")).thenReturn(false);
         DepositPaidEvent evt = event("MONTHLY_RENT");
         when(objectMapper.readValue("v", DepositPaidEvent.class)).thenReturn(evt);
         UserResponse user = UserResponse.newBuilder()
                 .setId(evt.tenantId().toString()).setEmail("alice@example.com").setName("Alice").build();
         when(userGrpcClient.getUserById(evt.tenantId())).thenReturn(user);
 
-        listener.handlePaymentPaid(rec, ack);
+        listener.handlePaymentPaid("v");
 
         verify(emailService).sendEmail(eq("alice@example.com"), eq("payment_receipt"),
                 eq(LocaleType.vi_VN), any());
-        verify(ack).acknowledge();
     }
 
     @Test
-    @DisplayName("skips when duplicate")
-    void duplicate() {
-        when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-        when(idempotencyService.isDuplicate("m1")).thenReturn(true);
-
-        listener.handlePaymentPaid(rec, ack);
-
-        verify(ack).acknowledge();
-        verifyNoInteractions(emailService, userGrpcClient);
+    @DisplayName("swallows null payload (no work, no retry)")
+    void nullPayload() {
+        listener.handlePaymentPaid(null);
+        verifyNoInteractions(emailService, userGrpcClient, objectMapper);
     }
 
     @Test
-    @DisplayName("acks and skips when gRPC returns null user")
+    @DisplayName("skips email when gRPC returns null user and event has no email")
     void userNull() throws Exception {
-        when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-        when(idempotencyService.isDuplicate("m1")).thenReturn(false);
         DepositPaidEvent evt = event("DEPOSIT");
         when(objectMapper.readValue("v", DepositPaidEvent.class)).thenReturn(evt);
         when(userGrpcClient.getUserById(any())).thenReturn(null);
 
-        listener.handlePaymentPaid(rec, ack);
+        listener.handlePaymentPaid("v");
 
-        verify(ack).acknowledge();
         verifyNoInteractions(emailService);
     }
 
     @Test
-    @DisplayName("acks on JacksonException (poison pill)")
+    @DisplayName("swallows JacksonException (poison pill — no retry)")
     void jackson() throws Exception {
-        when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-        when(idempotencyService.isDuplicate("m1")).thenReturn(false);
         when(objectMapper.readValue(any(String.class), eq(DepositPaidEvent.class)))
                 .thenThrow(new JacksonException("bad") {});
 
-        listener.handlePaymentPaid(rec, ack);
+        listener.handlePaymentPaid("v");
 
-        verify(ack).acknowledge();
+        verifyNoInteractions(emailService);
     }
 
     @Test
     @DisplayName("rethrows for retry on email send failure")
     void retry() throws Exception {
-        when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-        when(idempotencyService.isDuplicate("m1")).thenReturn(false);
         DepositPaidEvent evt = event("UTILITY");
         when(objectMapper.readValue("v", DepositPaidEvent.class)).thenReturn(evt);
         UserResponse user = UserResponse.newBuilder()
@@ -126,9 +111,8 @@ class PaymentEventListenerTest {
         when(userGrpcClient.getUserById(any())).thenReturn(user);
         doThrow(new RuntimeException("smtp")).when(emailService).sendEmail(any(), any(), any(), any());
 
-        assertThatThrownBy(() -> listener.handlePaymentPaid(rec, ack))
+        assertThatThrownBy(() -> listener.handlePaymentPaid("v"))
                 .isInstanceOf(RuntimeException.class);
-        verify(ack, never()).acknowledge();
     }
 
     @Test
