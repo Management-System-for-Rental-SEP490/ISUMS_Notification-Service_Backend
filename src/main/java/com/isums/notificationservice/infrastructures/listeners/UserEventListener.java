@@ -1,7 +1,7 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isums.notificationservice.domains.events.UserActivatedEvent;
 import com.isums.notificationservice.domains.events.SendEmailEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
@@ -35,40 +35,32 @@ public class UserEventListener {
     private static final ZoneId VN = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(VN);
 
-    @KafkaListener(topics = "notification-email", groupId = "notification-group", concurrency = "3")
-    public void handleSendEmail(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+    @KafkaListener(topics = "notification-email", groupId = "notification-group-v2",
+            properties = {"auto.offset.reset:earliest"}, concurrency = "3")
+    public void handleSendEmail(String payload) {
+        log.info("[Email] handleSendEmail ENTRY len={}", payload != null ? payload.length() : -1);
         try {
-            if (idempotencyService.isDuplicate(messageId)) {
-                log.warn("Duplicate skipped messageId={}", messageId);
-                ack.acknowledge();
+            if (payload == null) {
+                log.error("[Email] null payload, skipping");
                 return;
             }
-
-            SendEmailEvent event = objectMapper.readValue(record.value(), SendEmailEvent.class);
+            SendEmailEvent event = objectMapper.readValue(payload, SendEmailEvent.class);
 
             if (event.to() == null || event.to().isBlank()) {
-                log.error("Invalid event: missing 'to' field. messageId={}", messageId);
-                ack.acknowledge();
+                log.error("[Email] Invalid event: missing 'to' field. raw={}", payload);
                 return;
             }
 
             emailService.sendEmail(event.to(), event.templateCode().toLowerCase(), LocaleType.vi_VN,
                     event.params() != null ? event.params() : Map.of());
 
-            idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
-            log.info("email_dispatched messageId={} to={} template={}", messageId, event.to(), event.templateCode());
+            log.info("[Email] email_dispatched to={} template={}", event.to(), event.templateCode());
 
         } catch (JacksonException e) {
-            log.error("Deserialization failed messageId={} raw={}: {}", messageId, record.value(), e.getMessage());
-            ack.acknowledge();
+            log.error("[Email] Deserialization failed raw={}: {}", payload, e.getMessage());
         } catch (Exception e) {
-            log.error("Processing failed messageId={}, will retry: {}", messageId, e.getMessage(), e);
+            log.error("[Email] Processing failed, will retry: {}", e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 
