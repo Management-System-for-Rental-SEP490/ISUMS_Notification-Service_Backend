@@ -10,8 +10,11 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponseException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
@@ -96,6 +99,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponses.fail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestParameterException ex) {
+        ApiResponse<Void> res = ApiResponses.fail(
+                HttpStatus.BAD_REQUEST,
+                "Missing required query parameter: " + ex.getParameterName(),
+                List.of(ApiError.builder()
+                        .code("MISSING_PARAMETER")
+                        .message("Parameter '" + ex.getParameterName() + "' (" + ex.getParameterType() + ") is required")
+                        .build())
+        );
+        return ResponseEntity.status(res.getStatusCode()).body(res);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String want = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "expected type";
+        ApiResponse<Void> res = ApiResponses.fail(
+                HttpStatus.BAD_REQUEST,
+                "Invalid value for parameter: " + ex.getName(),
+                List.of(ApiError.builder()
+                        .code("INVALID_PARAMETER")
+                        .message("Parameter '" + ex.getName() + "' could not be parsed to " + want)
+                        .build())
+        );
+        return ResponseEntity.status(res.getStatusCode()).body(res);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        List<ApiError> errs = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> ApiError.builder()
+                        .code("VALIDATION_ERROR")
+                        .message(e.getField() + ": " + e.getDefaultMessage())
+                        .build())
+                .toList();
+        ApiResponse<Void> res = ApiResponses.fail(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed",
+                errs);
+        return ResponseEntity.status(res.getStatusCode()).body(res);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

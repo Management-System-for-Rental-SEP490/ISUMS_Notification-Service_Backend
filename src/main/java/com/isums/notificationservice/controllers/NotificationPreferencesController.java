@@ -6,16 +6,21 @@ import com.isums.notificationservice.domains.dtos.NotificationPreferencesDto;
 import com.isums.notificationservice.domains.dtos.SubscriptionDto;
 import com.isums.notificationservice.domains.dtos.UpdatePreferencesRequest;
 import com.isums.notificationservice.domains.entities.UserNotificationPreferences;
+import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.notificationservice.services.NotificationPreferenceService;
 import com.isums.notificationservice.services.NotificationQuotaService;
 import com.isums.notificationservice.services.NotificationSubscriptionService;
+import com.isums.userservice.grpc.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -23,11 +28,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/notifications/preferences")
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationPreferencesController {
 
     private final NotificationPreferenceService preferenceService;
     private final NotificationSubscriptionService subscriptionService;
     private final NotificationQuotaService quotaService;
+    private final UserGrpcClient userGrpcClient;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<NotificationPreferencesDto>> getMyPreferences(
@@ -85,20 +92,22 @@ public class NotificationPreferencesController {
     @GetMapping("/me/subscription")
     public ResponseEntity<ApiResponse<SubscriptionDto>> getMySubscription(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam("houseId") UUID houseId) {
+            @RequestParam(value = "houseId", required = false) UUID houseId) {
         UUID userId = UUID.fromString(jwt.getSubject());
+        UUID effectiveHouseId = resolveHouseId(jwt, houseId);
         SubscriptionDto dto = subscriptionService.toDto(
-                preferenceService.getSubscriptionOrCreate(userId, houseId));
+                preferenceService.getSubscriptionOrCreate(userId, effectiveHouseId));
         return ResponseEntity.ok(ApiResponses.ok(dto, "OK"));
     }
 
     @GetMapping("/me/quota")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMyQuota(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam("houseId") UUID houseId) {
+            @RequestParam(value = "houseId", required = false) UUID houseId) {
         UUID userId = UUID.fromString(jwt.getSubject());
+        UUID effectiveHouseId = resolveHouseId(jwt, houseId);
         SubscriptionDto sub = subscriptionService.toDto(
-                preferenceService.getSubscriptionOrCreate(userId, houseId));
+                preferenceService.getSubscriptionOrCreate(userId, effectiveHouseId));
         long cooldown = quotaService.remainingRateLimitSec(userId);
         Map<String, Object> body = Map.of(
                 "tier", sub.tier(),
@@ -112,5 +121,21 @@ public class NotificationPreferencesController {
                 "currentMonthKey", NotificationQuotaService.currentMonthKey()
         );
         return ResponseEntity.ok(ApiResponses.ok(body, "OK"));
+    }
+
+    private UUID resolveHouseId(Jwt jwt, UUID houseIdParam) {
+        if (houseIdParam != null) return houseIdParam;
+        String keycloakId = jwt.getSubject();
+        try {
+            UserResponse user = userGrpcClient.getUserByKeycloakId(keycloakId);
+            String mainHouseId = user != null ? user.getMainHouseId() : null;
+            if (mainHouseId != null && !mainHouseId.isBlank()) {
+                return UUID.fromString(mainHouseId);
+            }
+        } catch (Exception e) {
+            log.warn("[Prefs] mainHouseId lookup failed keycloakId={}: {}", keycloakId, e.getMessage());
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "houseId is required and no mainHouseId is set on this account");
     }
 }
