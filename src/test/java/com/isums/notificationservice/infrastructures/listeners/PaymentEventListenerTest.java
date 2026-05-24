@@ -1,5 +1,7 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.domains.events.DepositPaidEvent;
 import com.isums.notificationservice.domains.events.DepositRefundPaidEvent;
@@ -16,8 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -43,9 +42,6 @@ class PaymentEventListenerTest {
     @Mock private Acknowledgment ack;
 
     @InjectMocks private PaymentEventListener listener;
-
-    private final ConsumerRecord<String, String> rec =
-            new ConsumerRecord<>("payment-paid-topic", 0, 0L, "k", "v");
 
     private DepositPaidEvent event(String type) {
         UUID id = UUID.randomUUID();
@@ -91,10 +87,10 @@ class PaymentEventListenerTest {
     }
 
     @Test
-    @DisplayName("swallows JacksonException (poison pill — no retry)")
+    @DisplayName("swallows JsonParseException (poison pill — no retry)")
     void jackson() throws Exception {
         when(objectMapper.readValue(any(String.class), eq(DepositPaidEvent.class)))
-                .thenThrow(new JacksonException("bad") {});
+                .thenThrow(new JsonParseException(null, "bad"));
 
         listener.handlePaymentPaid("v");
 

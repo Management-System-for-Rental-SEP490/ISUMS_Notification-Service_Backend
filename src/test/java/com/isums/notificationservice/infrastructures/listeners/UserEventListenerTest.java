@@ -1,32 +1,29 @@
 package com.isums.notificationservice.infrastructures.listeners;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.domains.events.SendEmailEvent;
 import com.isums.notificationservice.domains.events.UserActivatedEvent;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
-import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.support.Acknowledgment;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -36,10 +33,7 @@ import static org.mockito.Mockito.when;
 class UserEventListenerTest {
 
     @Mock private EmailService emailService;
-    @Mock private IdempotencyService idempotencyService;
-    @Mock private KafkaListenerHelper kafkaHelper;
     @Mock private ObjectMapper objectMapper;
-    @Mock private Acknowledgment ack;
 
     @InjectMocks private UserEventListener listener;
 
@@ -47,76 +41,74 @@ class UserEventListenerTest {
     @DisplayName("handleSendEmail")
     class HandleSendEmail {
 
-        private ConsumerRecord<String, String> rec = new ConsumerRecord<>("notification-email", 0, 0L, "k", "v");
-
         @Test
-        @DisplayName("dispatches email to EmailService on happy path")
+        @DisplayName("dispatches email to EmailService on happy path (lowercased template)")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            SendEmailEvent event = new SendEmailEvent(
-                    "alice@example.com", "WELCOME", Map.of("name", "Alice"));
+            SendEmailEvent event = SendEmailEvent.builder()
+                    .to("alice@example.com")
+                    .templateCode("WELCOME")
+                    .params(Map.of("name", "Alice"))
+                    .build();
             when(objectMapper.readValue("v", SendEmailEvent.class)).thenReturn(event);
 
-            listener.handleSendEmail(rec, ack);
+            listener.handleSendEmail("v");
 
             verify(emailService).sendEmail("alice@example.com", "welcome",
                     LocaleType.vi_VN, Map.of("name", "Alice"));
-            verify(ack).acknowledge();
         }
 
         @Test
-        @DisplayName("skips-and-acks when duplicate")
-        void duplicate() {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(true);
-
-            listener.handleSendEmail(rec, ack);
-
-            verify(ack).acknowledge();
-            verifyNoInteractions(emailService);
+        @DisplayName("swallows null payload (no work, no retry)")
+        void nullPayload() {
+            listener.handleSendEmail(null);
+            verifyNoInteractions(emailService, objectMapper);
         }
 
         @Test
-        @DisplayName("acks and skips when 'to' is blank (invalid event)")
+        @DisplayName("skips invalid event with blank 'to' field")
         void missingTo() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
             when(objectMapper.readValue("v", SendEmailEvent.class))
-                    .thenReturn(new SendEmailEvent(null, "x", Map.of()));
+                    .thenReturn(SendEmailEvent.builder().to(null).templateCode("x").params(Map.of()).build());
 
-            listener.handleSendEmail(rec, ack);
+            listener.handleSendEmail("v");
 
-            verify(ack).acknowledge();
             verifyNoInteractions(emailService);
         }
 
         @Test
-        @DisplayName("acks on JacksonException (poison-pill handling)")
-        void jacksonException() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+        @DisplayName("swallows poison message on JacksonException (no retry)")
+        void jacksonExceptionSkips() throws Exception {
             when(objectMapper.readValue(any(String.class), eq(SendEmailEvent.class)))
-                    .thenThrow(new JacksonException("bad") {});
+                    .thenThrow(new JsonParseException(null, "bad"));
 
-            listener.handleSendEmail(rec, ack);
+            listener.handleSendEmail("v");
 
-            verify(ack).acknowledge();
+            verifyNoInteractions(emailService);
         }
 
         @Test
-        @DisplayName("rethrows RuntimeException for retry on downstream failure")
-        void retry() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            SendEmailEvent event = new SendEmailEvent("a@b.com", "WELCOME", Map.of());
+        @DisplayName("rethrows RuntimeException for retry on downstream EmailService failure")
+        void downstreamFailureRetries() throws Exception {
+            SendEmailEvent event = SendEmailEvent.builder()
+                    .to("a@b.com").templateCode("WELCOME").params(Map.of()).build();
             when(objectMapper.readValue("v", SendEmailEvent.class)).thenReturn(event);
             doThrow(new RuntimeException("smtp"))
                     .when(emailService).sendEmail(any(), any(), any(), any());
 
-            assertThatThrownBy(() -> listener.handleSendEmail(rec, ack))
+            assertThatThrownBy(() -> listener.handleSendEmail("v"))
                     .isInstanceOf(RuntimeException.class);
-            verify(ack, never()).acknowledge();
+        }
+
+        @Test
+        @DisplayName("forwards empty Map when params is null")
+        void nullParamsFallsBackToEmptyMap() throws Exception {
+            SendEmailEvent event = SendEmailEvent.builder()
+                    .to("a@b.com").templateCode("WELCOME").params(null).build();
+            when(objectMapper.readValue("v", SendEmailEvent.class)).thenReturn(event);
+
+            listener.handleSendEmail("v");
+
+            verify(emailService).sendEmail("a@b.com", "welcome", LocaleType.vi_VN, Map.of());
         }
     }
 
@@ -124,152 +116,188 @@ class UserEventListenerTest {
     @DisplayName("handleOnUserActivated")
     class HandleActivated {
 
-        private ConsumerRecord<String, String> rec =
-                new ConsumerRecord<>("user-activated-topic", 0, 0L, "k", "v");
-
-        private UserActivatedEvent eventWithInvoice(String paymentUrl) {
+        private UserActivatedEvent eventBuilder(String locale, String paymentUrl) {
             return UserActivatedEvent.builder()
                     .userId(UUID.randomUUID())
-                    .email("bob@example.com").name("Bob")
+                    .email("bob@example.com")
+                    .name("Bob")
+                    .password("Tmp@123")
+                    .locale(locale)
                     .firstRentPaymentUrl(paymentUrl)
                     .firstRentAmount(5_000_000L)
-                    .firstRentDueDate(Instant.now().plusSeconds(86400))
+                    .firstRentDueDate(Instant.parse("2026-06-01T00:00:00Z"))
                     .build();
         }
 
         @Test
-        @DisplayName("sends user_activated email with invoice fields when firstRentPaymentUrl present")
+        @DisplayName("sends user_activated email with full invoice block when firstRentPaymentUrl present")
         void withInvoice() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            when(objectMapper.readValue("v", UserActivatedEvent.class))
-                    .thenReturn(eventWithInvoice("https://pay.example/1"));
+            UserActivatedEvent event = eventBuilder("vi_VN", "https://pay.example/1");
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
 
-            listener.handleOnUserActivated(rec, ack);
+            listener.handleOnUserActivated("v");
 
+            ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
             verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
-                    eq(LocaleType.vi_VN), any());
-            verify(ack).acknowledge();
+                    eq(LocaleType.vi_VN), cap.capture());
+            Map<String, Object> p = cap.getValue();
+            assertThat(p)
+                    .containsEntry("name", "Bob")
+                    .containsEntry("email", "bob@example.com")
+                    .containsEntry("password", "Tmp@123")
+                    .containsEntry("hasInvoice", true)
+                    .containsEntry("invoiceTypeCode", "MONTHLY_RENT")
+                    .containsEntry("invoicePaymentUrl", "https://pay.example/1")
+                    .containsKey("invoiceAmount")
+                    .containsKey("invoiceDueDate");
         }
 
         @Test
-        @DisplayName("sends without invoice params when firstRentPaymentUrl null")
+        @DisplayName("sends email without invoice fields when firstRentPaymentUrl null")
         void withoutInvoice() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            when(objectMapper.readValue("v", UserActivatedEvent.class))
-                    .thenReturn(eventWithInvoice(null));
+            UserActivatedEvent event = eventBuilder("vi_VN", null);
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
 
-            listener.handleOnUserActivated(rec, ack);
+            listener.handleOnUserActivated("v");
 
+            ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
             verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
-                    eq(LocaleType.vi_VN), any());
-            verify(ack).acknowledge();
+                    eq(LocaleType.vi_VN), cap.capture());
+            Map<String, Object> p = cap.getValue();
+            assertThat(p)
+                    .containsEntry("hasInvoice", false)
+                    .doesNotContainKey("invoicePaymentUrl")
+                    .doesNotContainKey("invoiceAmount");
         }
 
         @Test
-        @DisplayName("acks on JacksonException")
-        void jackson() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+        @DisplayName("password is empty string when event.password is null (template-safe)")
+        void nullPasswordBecomesEmpty() throws Exception {
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("nopass@example.com")
+                    .name("Pass")
+                    .password(null)
+                    .locale("vi_VN")
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+            verify(emailService).sendEmail(eq("nopass@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), cap.capture());
+            assertThat(cap.getValue()).containsEntry("password", "");
+        }
+
+        @Test
+        @DisplayName("name falls back to email when event.name is null")
+        void nullNameFallsBackToEmail() throws Exception {
+            UserActivatedEvent event = UserActivatedEvent.builder()
+                    .userId(UUID.randomUUID())
+                    .email("noname@example.com")
+                    .name(null)
+                    .password("Tmp@123")
+                    .locale("vi_VN")
+                    .build();
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+            verify(emailService).sendEmail(eq("noname@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), cap.capture());
+            assertThat(cap.getValue()).containsEntry("name", "noname@example.com");
+        }
+
+        @Test
+        @DisplayName("uses en_US locale when event.locale is en_US")
+        void englishLocale() throws Exception {
+            UserActivatedEvent event = eventBuilder("en_US", "https://pay.example/1");
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
+                    eq(LocaleType.en_US), any());
+        }
+
+        @Test
+        @DisplayName("uses ja_JP locale when event.locale is ja_JP")
+        void japaneseLocale() throws Exception {
+            UserActivatedEvent event = eventBuilder("ja_JP", "https://pay.example/1");
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
+                    eq(LocaleType.ja_JP), any());
+        }
+
+        @Test
+        @DisplayName("falls back to vi_VN when event.locale is null")
+        void nullLocaleFallsBackToViVn() throws Exception {
+            UserActivatedEvent event = eventBuilder(null, "https://pay.example/1");
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), any());
+        }
+
+        @Test
+        @DisplayName("falls back to vi_VN when event.locale is garbage")
+        void invalidLocaleFallsBackToViVn() throws Exception {
+            UserActivatedEvent event = eventBuilder("xx_YY", "https://pay.example/1");
+            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+
+            listener.handleOnUserActivated("v");
+
+            verify(emailService).sendEmail(eq("bob@example.com"), eq("user_activated"),
+                    eq(LocaleType.vi_VN), any());
+        }
+
+        @Test
+        @DisplayName("swallows poison message on JacksonException (no retry, no DLQ — preserve original semantics)")
+        void jacksonExceptionSkips() throws Exception {
             when(objectMapper.readValue(any(String.class), eq(UserActivatedEvent.class)))
-                    .thenThrow(new JacksonException("bad") {});
+                    .thenThrow(new JsonParseException(null, "bad"));
 
-            listener.handleOnUserActivated(rec, ack);
+            listener.handleOnUserActivated("v");
 
-            verify(ack).acknowledge();
             verifyNoInteractions(emailService);
         }
 
         @Test
-        @DisplayName("uses en_US locale when event.locale is en_US (foreign tenant English)")
-        void englishLocale() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            UserActivatedEvent event = UserActivatedEvent.builder()
-                    .userId(UUID.randomUUID())
-                    .email("john@example.com").name("John")
-                    .password("Tmp@123")
-                    .locale("en_US")
-                    .firstRentPaymentUrl("https://pay.example/1")
-                    .firstRentAmount(10_000_000L)
-                    .firstRentDueDate(Instant.now().plusSeconds(86400))
-                    .build();
-            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
-
-            listener.handleOnUserActivated(rec, ack);
-
-            verify(emailService).sendEmail(eq("john@example.com"), eq("user_activated"),
-                    eq(LocaleType.en_US), any());
-            verify(ack).acknowledge();
+        @DisplayName("swallows null payload (no work, no retry)")
+        void nullPayload() {
+            listener.handleOnUserActivated(null);
+            verifyNoInteractions(emailService, objectMapper);
         }
 
         @Test
-        @DisplayName("uses ja_JP locale when event.locale is ja_JP (foreign tenant Japanese)")
-        void japaneseLocale() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+        @DisplayName("skips when event.email is blank")
+        void blankEmailSkips() throws Exception {
             UserActivatedEvent event = UserActivatedEvent.builder()
-                    .userId(UUID.randomUUID())
-                    .email("yamada@example.jp").name("Yamada")
-                    .password("Tmp@123")
-                    .locale("ja_JP")
-                    .firstRentPaymentUrl("https://pay.example/1")
-                    .firstRentAmount(10_000_000L)
-                    .firstRentDueDate(Instant.now().plusSeconds(86400))
-                    .build();
+                    .userId(UUID.randomUUID()).email("").name("X").password("Tmp@123").locale("vi_VN").build();
             when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
 
-            listener.handleOnUserActivated(rec, ack);
+            listener.handleOnUserActivated("v");
 
-            verify(emailService).sendEmail(eq("yamada@example.jp"), eq("user_activated"),
-                    eq(LocaleType.ja_JP), any());
-            verify(ack).acknowledge();
+            verifyNoInteractions(emailService);
         }
 
         @Test
-        @DisplayName("falls back to vi_VN when event.locale is null (legacy events)")
-        void nullLocaleFallsBackToViVn() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            UserActivatedEvent event = UserActivatedEvent.builder()
-                    .userId(UUID.randomUUID())
-                    .email("legacy@example.com").name("Legacy")
-                    .password("Tmp@123")
-                    .firstRentPaymentUrl("https://pay.example/1")
-                    .firstRentAmount(10_000_000L)
-                    .firstRentDueDate(Instant.now().plusSeconds(86400))
-                    .build();
+        @DisplayName("rethrows RuntimeException for retry on downstream EmailService failure")
+        void downstreamFailureRetries() throws Exception {
+            UserActivatedEvent event = eventBuilder("vi_VN", "https://pay.example/1");
             when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
+            doThrow(new RuntimeException("smtp down"))
+                    .when(emailService).sendEmail(any(), any(), any(), any());
 
-            listener.handleOnUserActivated(rec, ack);
-
-            verify(emailService).sendEmail(eq("legacy@example.com"), eq("user_activated"),
-                    eq(LocaleType.vi_VN), any());
-            verify(ack).acknowledge();
-        }
-
-        @Test
-        @DisplayName("falls back to vi_VN when event.locale is unrecognised garbage")
-        void invalidLocaleFallsBackToViVn() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            UserActivatedEvent event = UserActivatedEvent.builder()
-                    .userId(UUID.randomUUID())
-                    .email("garbage@example.com").name("Garbage")
-                    .password("Tmp@123")
-                    .locale("xx_YY")
-                    .firstRentPaymentUrl("https://pay.example/1")
-                    .firstRentAmount(10_000_000L)
-                    .firstRentDueDate(Instant.now().plusSeconds(86400))
-                    .build();
-            when(objectMapper.readValue("v", UserActivatedEvent.class)).thenReturn(event);
-
-            listener.handleOnUserActivated(rec, ack);
-
-            verify(emailService).sendEmail(eq("garbage@example.com"), eq("user_activated"),
-                    eq(LocaleType.vi_VN), any());
-            verify(ack).acknowledge();
+            assertThatThrownBy(() -> listener.handleOnUserActivated("v"))
+                    .isInstanceOf(RuntimeException.class);
         }
     }
 }
