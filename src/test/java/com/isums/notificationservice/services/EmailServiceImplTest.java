@@ -27,6 +27,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
+import jakarta.mail.Address;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("EmailServiceImpl")
@@ -42,12 +46,14 @@ class EmailServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        // Use real resilience4j instances (no-op behaviour) to avoid mocking complex static behaviours
         sesRateLimiter = RateLimiter.ofDefaults("test");
         sesRetry = Retry.ofDefaults("test");
         ReflectionTestUtils.setField(service, "sesRateLimiter", sesRateLimiter);
         ReflectionTestUtils.setField(service, "sesRetry", sesRetry);
         ReflectionTestUtils.setField(service, "from", "no-reply@isums.pro");
+        ReflectionTestUtils.setField(service, "fromNameVi", "Hệ Thống ISUMS");
+        ReflectionTestUtils.setField(service, "fromNameEn", "ISUMS System");
+        ReflectionTestUtils.setField(service, "fromNameJa", "ISUMSシステム");
     }
 
     private EmailTemplateCached tpl() {
@@ -169,6 +175,91 @@ class EmailServiceImplTest {
                     Map.of("name", "John"));
 
             verify(mailSender).send(any(MimeMessage.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("From display name per locale")
+    class FromName {
+
+        private InternetAddress captureFromAfterSend(LocaleType locale) throws Exception {
+            EmailTemplateCached anyTpl = new EmailTemplateCached(
+                    1, "Subj {{name}}", "<h1>{{name}}</h1>", null, List.of("name"));
+            when(templateService.getActive(any(String.class), any(LocaleType.class)))
+                    .thenReturn(anyTpl);
+
+            Session realSession = Session.getInstance(new Properties());
+            MimeMessage mime = new MimeMessage(realSession);
+            when(mailSender.createMimeMessage()).thenReturn(mime);
+
+            service.sendEmail("recipient@example.com", "welcome", locale, Map.of("name", "X"));
+
+            ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
+            verify(mailSender).send(cap.capture());
+            Address[] fromArr = cap.getValue().getFrom();
+            assertThat(fromArr).hasSize(1);
+            return (InternetAddress) fromArr[0];
+        }
+
+        @Test
+        @DisplayName("vi_VN renders From display name 'Hệ Thống ISUMS'")
+        void viVn() throws Exception {
+            InternetAddress addr = captureFromAfterSend(LocaleType.vi_VN);
+            assertThat(addr.getPersonal()).isEqualTo("Hệ Thống ISUMS");
+            assertThat(addr.getAddress()).isEqualTo("no-reply@isums.pro");
+        }
+
+        @Test
+        @DisplayName("en_US renders From display name 'ISUMS System'")
+        void enUs() throws Exception {
+            InternetAddress addr = captureFromAfterSend(LocaleType.en_US);
+            assertThat(addr.getPersonal()).isEqualTo("ISUMS System");
+            assertThat(addr.getAddress()).isEqualTo("no-reply@isums.pro");
+        }
+
+        @Test
+        @DisplayName("ja_JP renders From display name 'ISUMSシステム' (Japanese)")
+        void jaJp() throws Exception {
+            InternetAddress addr = captureFromAfterSend(LocaleType.ja_JP);
+            assertThat(addr.getPersonal()).isEqualTo("ISUMSシステム");
+            assertThat(addr.getAddress()).isEqualTo("no-reply@isums.pro");
+        }
+
+        @Test
+        @DisplayName("null locale falls back to vi_VN From name")
+        void nullLocaleFallsBackToViVn() throws Exception {
+            InternetAddress addr = captureFromAfterSend(null);
+            assertThat(addr.getPersonal()).isEqualTo("Hệ Thống ISUMS");
+        }
+
+        @Test
+        @DisplayName("when configured fromName is blank, From has no personal (address only)")
+        void blankFromNameSkipsPersonal() throws Exception {
+            ReflectionTestUtils.setField(service, "fromNameVi", "");
+            InternetAddress addr = captureFromAfterSend(LocaleType.vi_VN);
+            assertThat(addr.getPersonal()).isNull();
+            assertThat(addr.getAddress()).isEqualTo("no-reply@isums.pro");
+        }
+
+        @Test
+        @DisplayName("From header encoded as RFC 2047 UTF-8 for non-ASCII (Vietnamese)")
+        void rfc2047Encoded() throws Exception {
+            EmailTemplateCached anyTpl = new EmailTemplateCached(
+                    1, "S", "<p>B</p>", null, List.of());
+            when(templateService.getActive(any(String.class), any(LocaleType.class)))
+                    .thenReturn(anyTpl);
+            Session realSession = Session.getInstance(new Properties());
+            MimeMessage mime = new MimeMessage(realSession);
+            when(mailSender.createMimeMessage()).thenReturn(mime);
+
+            service.sendEmail("r@example.com", "welcome", LocaleType.vi_VN, Map.of());
+
+            ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
+            verify(mailSender).send(cap.capture());
+            String fromHeader = cap.getValue().getHeader("From", null);
+            assertThat(fromHeader)
+                    .as("Should be RFC 2047 base64-or-q encoded with UTF-8 charset")
+                    .matches("=\\?(?i)UTF-8\\?[BQ]\\?[^?]+\\?=.*<no-reply@isums\\.pro>");
         }
     }
 }
