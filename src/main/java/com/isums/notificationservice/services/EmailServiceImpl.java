@@ -25,6 +25,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
+    private static final java.util.Set<String> SYSTEM_METADATA_VARS = java.util.Set.of(
+            "houseId",
+            "areaId"
+    );
 
     private final EmailTemplateService templateService;
     private final JavaMailSender mailSender;
@@ -127,6 +131,7 @@ public class EmailServiceImpl implements EmailService {
     private void validateVars(EmailTemplateCached tpl, Map<String, Object> vars) {
         if (tpl.allowedVars() == null || tpl.allowedVars().isEmpty()) return;
         for (String k : vars.keySet()) {
+            if (SYSTEM_METADATA_VARS.contains(k)) continue;
             if (!tpl.allowedVars().contains(k)) {
                 log.warn("Extra template variable (not in allowedVars, will be ignored by Mustache): {}", k);
             }

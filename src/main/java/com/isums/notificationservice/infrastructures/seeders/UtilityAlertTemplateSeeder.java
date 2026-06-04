@@ -27,7 +27,8 @@ public class UtilityAlertTemplateSeeder {
     private static final String ACTOR           = "system";
     private static final List<String> ALLOWED_VARS = List.of(
             "landlordName", "userName", "houseName", "metricLabel", "currentUsage",
-            "monthlyLimit", "unit", "usagePercent", "month", "severity", "occurredAt"
+            "monthlyLimit", "unit", "usagePercent", "month", "severity", "occurredAt",
+            "houseId", "areaId", "areaName", "thing", "metric", "value", "eventType", "modelId", "score"
     );
 
     @Value("${app.seed.email-templates:true}")
@@ -114,6 +115,16 @@ public class UtilityAlertTemplateSeeder {
                 "Khẩn cấp nước: {{houseName}} đã vượt hạn mức",
                 "Critical water alert: {{houseName}} exceeded its limit",
                 "緊急水道警報: {{houseName}}が上限を超過");
+        seedEifAlias(templateRepo, versionRepo, "alert_eif_anomaly_power",
+                "AI phát hiện bất thường điện tại {{houseName}}",
+                "AI detected abnormal power usage at {{houseName}}",
+                "{{houseName}}で電力異常をAIが検知しました",
+                "điện", "power");
+        seedEifAlias(templateRepo, versionRepo, "alert_eif_anomaly_water",
+                "AI phát hiện bất thường nước tại {{houseName}}",
+                "AI detected abnormal water usage at {{houseName}}",
+                "{{houseName}}で水道異常をAIが検知しました",
+                "nước", "water");
     }
 
     private void upsertIfAbsent(
@@ -240,6 +251,79 @@ public class UtilityAlertTemplateSeeder {
                             <tr><td style="padding:9px 12px;color:#6b7280;">Used</td><td style="padding:9px 12px;"><strong>{{currentUsage}} {{unit}}</strong></td></tr>
                             <tr style="background:#f9fafb;"><td style="padding:9px 12px;color:#6b7280;">Limit</td><td style="padding:9px 12px;">{{monthlyLimit}} {{unit}}</td></tr>
                             <tr><td style="padding:9px 12px;color:#6b7280;">Ratio</td><td style="padding:9px 12px;color:#dc2626;font-weight:700;">{{usagePercent}}%%</td></tr>
+                            <tr style="background:#f9fafb;"><td style="padding:9px 12px;color:#6b7280;">Time</td><td style="padding:9px 12px;">{{occurredAt}}</td></tr>
+                          </table>
+                        </td></tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body></html>
+                """.formatted(greeting, lead);
+    }
+
+    private void seedEifAlias(
+            EmailTemplateRepository templateRepo,
+            EmailTemplateVersionRepository versionRepo,
+            String templateKey,
+            String subjectVi,
+            String subjectEn,
+            String subjectJa,
+            String viMetric,
+            String enMetric) {
+        upsertIfAbsent(templateRepo, versionRepo, templateKey, "TENANT", LocaleType.vi_VN,
+                subjectVi,
+                eifHtml("Xin chào {{userName}},",
+                        "AI EIF phát hiện mẫu tiêu thụ " + viMetric + " bất thường tại {{areaName}}."),
+                eifText("Xin chào {{userName}},",
+                        "AI EIF phát hiện mẫu tiêu thụ " + viMetric + " bất thường tại {{areaName}}."));
+        upsertIfAbsent(templateRepo, versionRepo, templateKey, "TENANT", LocaleType.en_US,
+                subjectEn,
+                eifHtml("Hello {{userName}},",
+                        "EIF detected abnormal " + enMetric + " usage in {{areaName}}."),
+                eifText("Hello {{userName}},",
+                        "EIF detected abnormal " + enMetric + " usage in {{areaName}}."));
+        upsertIfAbsent(templateRepo, versionRepo, templateKey, "TENANT", LocaleType.ja_JP,
+                subjectJa,
+                eifHtml("{{userName}}様、",
+                        "{{areaName}}で" + enMetric + "の異常な使用パターンをEIFが検知しました。"),
+                eifText("{{userName}}様、",
+                        "{{areaName}}で" + enMetric + "の異常な使用パターンをEIFが検知しました。"));
+    }
+
+    private static String eifText(String greeting, String lead) {
+        return """
+                %s
+
+                %s
+                - Nhà / House: {{houseName}}
+                - Khu vực / Area: {{areaName}}
+                - Chỉ số EIF / EIF score: {{score}}
+                - Model: {{modelId}}
+                - Thời điểm / Time: {{occurredAt}}
+
+                Vui lòng kiểm tra thiết bị hoặc liên hệ quản lý nếu bất thường vẫn tiếp diễn.
+                """.formatted(greeting, lead);
+    }
+
+    private static String eifHtml(String greeting, String lead) {
+        return """
+                <!doctype html><html><head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+                    <tr><td align="center">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="width:100%%;max-width:600px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+                        <tr><td style="padding:20px 24px;background:#0f766e;color:#fff;">
+                          <div style="font-size:12px;opacity:.9;letter-spacing:.08em;">ISUMS EIF ALERT</div>
+                          <div style="font-size:20px;font-weight:700;margin-top:4px;">{{houseName}}</div>
+                        </td></tr>
+                        <tr><td style="padding:22px 24px;color:#1f2937;">
+                          <p style="margin:0 0 12px;font-size:15px;">%s</p>
+                          <p style="margin:0 0 14px;font-size:14px;line-height:1.55;">%s</p>
+                          <table cellpadding="0" cellspacing="0" style="width:100%%;border-collapse:collapse;border:1px solid #e5e7eb;">
+                            <tr><td style="padding:9px 12px;color:#6b7280;">Area</td><td style="padding:9px 12px;"><strong>{{areaName}}</strong></td></tr>
+                            <tr style="background:#f9fafb;"><td style="padding:9px 12px;color:#6b7280;">EIF score</td><td style="padding:9px 12px;color:#dc2626;font-weight:700;">{{score}}</td></tr>
+                            <tr><td style="padding:9px 12px;color:#6b7280;">Model</td><td style="padding:9px 12px;">{{modelId}}</td></tr>
                             <tr style="background:#f9fafb;"><td style="padding:9px 12px;color:#6b7280;">Time</td><td style="padding:9px 12px;">{{occurredAt}}</td></tr>
                           </table>
                         </td></tr>
