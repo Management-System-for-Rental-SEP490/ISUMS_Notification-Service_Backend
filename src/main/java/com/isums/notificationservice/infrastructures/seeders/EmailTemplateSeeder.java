@@ -1434,6 +1434,68 @@ public class EmailTemplateSeeder {
 
         upsertActiveV1(
                 templateRepo, versionRepo,
+                "landlord_house_bookable_soon", "CONTRACT", "MANAGER",
+                LocaleType.vi_VN,
+                "Nhà #{{houseId}} sẽ mở đặt cọc trong {{daysRemaining}} ngày",
+                """
+                        <!doctype html>
+                        <html lang="vi">
+                        <head><meta charset="utf-8"></head>
+                        <body style="margin:0;padding:0;background:#f3f4f6;">
+                          <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr><td align="center" style="padding:32px 16px;">
+                              <table width="600" cellpadding="0" cellspacing="0"
+                                     style="background:#ffffff;border-radius:12px;overflow:hidden;
+                                            box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                                <tr>
+                                  <td style="padding:28px 32px;background:#2563eb;">
+                                    <div style="font-family:Arial,sans-serif;font-size:20px;
+                                                font-weight:700;color:#ffffff;">
+                                      Nhà sắp mở cho khách mới đặt cọc
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:28px 32px;">
+                                    <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                                      Kính gửi <strong>{{landlordName}}</strong>,
+                                    </p>
+                                    <p style="font-family:Arial,sans-serif;font-size:15px;color:#374151;">
+                                      Hợp đồng <strong>#{{contractId}}</strong> của nhà
+                                      <strong>#{{houseId}}</strong> sẽ hết hạn vào
+                                      <strong>{{endDate}}</strong>.
+                                    </p>
+                                    <p style="font-family:Arial,sans-serif;font-size:14px;color:#374151;">
+                                      Hiện không có yêu cầu gia hạn đang mở. Nhà đã đủ điều kiện
+                                      hiển thị trong danh sách đặt cọc sớm cho khách mới.
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td style="padding:14px 32px;background:#f9fafb;">
+                                    <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;">
+                                      Email này được gửi tự động. Vui lòng không trả lời trực tiếp.
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </body>
+                        </html>
+                        """,
+                """
+                        Kính gửi {{landlordName}},
+
+                        Hợp đồng #{{contractId}} của nhà #{{houseId}} sẽ hết hạn vào {{endDate}}.
+                        Hiện không có yêu cầu gia hạn đang mở. Nhà đã đủ điều kiện hiển thị trong danh sách đặt cọc sớm cho khách mới.
+                        """,
+                List.of("landlordName", "houseId", "contractId", "endDate", "daysRemaining"),
+                "system"
+        );
+
+        upsertActiveV1(
+                templateRepo, versionRepo,
                 "renewal_request_received", "CONTRACT", "MANAGER",
                 LocaleType.vi_VN,
                 "Khách {{tenantName}} muốn gia hạn hợp đồng #{{contractId}}",
