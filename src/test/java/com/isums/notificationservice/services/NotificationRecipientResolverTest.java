@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,23 +29,20 @@ class NotificationRecipientResolverTest {
     private NotificationRecipientResolver resolver;
 
     @Test
-    void resolvesInternalHouseRecipientsToJwtSubjectsAndDeduplicates() {
+    void resolvesConfiguredLandlordAndInternalManagerToJwtSubjectsAndDeduplicates() {
         UUID houseId = UUID.randomUUID();
-        UUID rentalUserId = UUID.randomUUID();
+        UUID landlordKeycloakId = UUID.randomUUID();
         UUID managerUserId = UUID.randomUUID();
-        UUID rentalKeycloakId = UUID.randomUUID();
         UUID managerKeycloakId = UUID.randomUUID();
 
-        when(houseGrpcClient.getLandlordIdByHouseId(houseId)).thenReturn(rentalUserId);
+        ReflectionTestUtils.setField(resolver, "landlordKeycloakId", landlordKeycloakId.toString());
         when(houseGrpcClient.getManagerIdByHouseId(houseId)).thenReturn(managerUserId);
-        when(userGrpcClient.getUserById(rentalUserId))
-                .thenReturn(user(rentalUserId, rentalKeycloakId));
         when(userGrpcClient.getUserById(managerUserId))
                 .thenReturn(user(managerUserId, managerKeycloakId));
 
         List<UUID> recipients = resolver.resolveLandlordAndManager(houseId, managerUserId);
 
-        assertThat(recipients).containsExactly(rentalKeycloakId, managerKeycloakId);
+        assertThat(recipients).containsExactly(landlordKeycloakId, managerKeycloakId);
     }
 
     private static UserResponse user(UUID internalId, UUID keycloakId) {

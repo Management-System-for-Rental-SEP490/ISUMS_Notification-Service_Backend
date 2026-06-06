@@ -5,6 +5,7 @@ import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.userservice.grpc.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,11 +22,14 @@ public class NotificationRecipientResolver {
     private final HouseGrpcClient houseGrpcClient;
     private final UserGrpcClient userGrpcClient;
 
+    @Value("${app.notification.landlord-keycloak-id:}")
+    private String landlordKeycloakId;
+
     public List<UUID> resolveLandlordAndManager(UUID houseId, UUID... extraRecipientIds) {
         Set<UUID> recipientIds = new LinkedHashSet<>();
 
         if (houseId != null) {
-            addCanonicalRecipient(recipientIds, houseGrpcClient.getLandlordIdByHouseId(houseId));
+            addConfiguredLandlord(recipientIds);
             addCanonicalRecipient(recipientIds, houseGrpcClient.getManagerIdByHouseId(houseId));
         }
 
@@ -36,6 +40,18 @@ public class NotificationRecipientResolver {
         }
 
         return new ArrayList<>(recipientIds);
+    }
+
+    private void addConfiguredLandlord(Set<UUID> recipientIds) {
+        if (landlordKeycloakId == null || landlordKeycloakId.isBlank()) {
+            log.warn("Landlord Keycloak ID is not configured; landlord notification will be skipped");
+            return;
+        }
+        try {
+            recipientIds.add(UUID.fromString(landlordKeycloakId));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid configured landlord Keycloak ID", e);
+        }
     }
 
     private void addCanonicalRecipient(Set<UUID> recipientIds, UUID userId) {
