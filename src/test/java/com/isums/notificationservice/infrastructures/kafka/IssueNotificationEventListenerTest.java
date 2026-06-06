@@ -66,7 +66,7 @@ class IssueNotificationEventListenerTest {
 
             when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
             when(idempotencyService.isDuplicate("m1")).thenReturn(false);
-            when(recipientResolver.resolveLandlordAndManager(houseId))
+            when(recipientResolver.resolveLandlordAndManager(houseId, staffId))
                     .thenReturn(List.of(landlordId, managerId));
             when(userGrpcClient.getUserById(staffId)).thenReturn(
                     UserResponse.newBuilder().setId(staffId.toString()).setName("Staff A").build());
@@ -134,6 +134,27 @@ class IssueNotificationEventListenerTest {
                     .containsEntry("tenantId", tenantId.toString())
                     .containsEntry("status", "CREATED");
             verify(ack).acknowledge();
+        }
+
+        @Test
+        @DisplayName("accepts legacy inspection job payload without blocking the Kafka partition")
+        void acceptsLegacyInspectionPayload() throws Exception {
+            String payload = """
+                    {
+                      "type": "CHECK_IN",
+                      "houseId": "828c3fb9-0bad-4030-b4d6-52da1bdca004",
+                      "messageId": "3eb1d353-1088-433f-9587-40b241903faf",
+                      "referenceId": "4057e9fb-96b3-4d31-ba34-a70dc7e3a6a5",
+                      "referenceType": "INSPECTION"
+                    }
+                    """;
+
+            IssueWorkSlotAssignedEvent event =
+                    new ObjectMapper().readValue(payload, IssueWorkSlotAssignedEvent.class);
+
+            assertThat(event.getReferenceType()).isEqualTo("INSPECTION");
+            assertThat(event.getReferenceId())
+                    .isEqualTo(UUID.fromString("4057e9fb-96b3-4d31-ba34-a70dc7e3a6a5"));
         }
     }
 

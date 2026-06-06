@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SseConnectionManager {
 
-    // Must be shorter than the gateway's spring.http.clients.read-timeout (10s).
+    // Must be shorter than the gateway's spring.http.clients.read-timeout (120s).
     // Otherwise the gateway's Apache HttpClient times out the upstream read,
     // closes the connection, and the client has to reconnect.
-    private static final long HEARTBEAT_INTERVAL_SECONDS = 7L;
+    private static final long HEARTBEAT_INTERVAL_SECONDS = 25L;
     // Finite emitter timeout forces clients to cycle connections periodically,
     // which lets the upstream proxy / gateway release pool slots held by
     // abandoned streams (dead laptops, closed tabs, reloaded HMR modules).

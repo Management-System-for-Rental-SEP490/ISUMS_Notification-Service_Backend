@@ -1,5 +1,6 @@
 package com.isums.notificationservice.domains.events;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IssueWorkSlotAssignedEvent {
     private UUID referenceId;
     private UUID tenantId;

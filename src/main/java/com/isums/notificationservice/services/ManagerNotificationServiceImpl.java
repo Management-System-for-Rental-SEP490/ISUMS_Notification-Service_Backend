@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -66,11 +68,27 @@ public class ManagerNotificationServiceImpl implements ManagerNotificationServic
                 .build();
 
         repo.save(n);
-        sseManager.push(recipientId, n);
-        translationRequester.requestMissing(n, resolvedLang);
+        String translationSourceLang = resolvedLang;
+        afterCommit(() -> {
+            sseManager.push(recipientId, n);
+            translationRequester.requestMissing(n, translationSourceLang);
+        });
 
         log.info("[Notification] Sent recipientId={} category={} sourceLang={}",
                 recipientId, category, resolvedLang);
+    }
+
+    private void afterCommit(Runnable action) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            action.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                action.run();
+            }
+        });
     }
 
     private TranslationMap sourceMap(String text, String lang) {

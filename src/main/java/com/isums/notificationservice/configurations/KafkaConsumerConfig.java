@@ -1,6 +1,7 @@
 package com.isums.notificationservice.configurations;
 
 import com.isums.notificationservice.infrastructures.exceptions.PermanentEventFailureException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.TopicPartition;
@@ -16,6 +17,7 @@ import org.springframework.util.backoff.ExponentialBackOff;
 import java.util.Map;
 
 @Configuration
+@Slf4j
 public class KafkaConsumerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -64,10 +66,15 @@ public class KafkaConsumerConfig {
         );
 
         ExponentialBackOff backOff = new ExponentialBackOff(1_000L, 2.0);
-        backOff.setMaxInterval(60_000L);
-        backOff.setMaxAttempts(Long.MAX_VALUE);
+        backOff.setMaxInterval(10_000L);
+        backOff.setMaxAttempts(5);
 
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backOff);
+        handler.setRetryListeners((record, ex, deliveryAttempt) ->
+                log.warn(
+                        "[Kafka] retry topic={} partition={} offset={} key={} attempt={} error={}",
+                        record.topic(), record.partition(), record.offset(), record.key(),
+                        deliveryAttempt, ex.getMessage()));
 
         handler.addNotRetryableExceptions(
                 tools.jackson.core.JacksonException.class,
