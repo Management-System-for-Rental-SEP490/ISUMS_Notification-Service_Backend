@@ -9,7 +9,6 @@ import com.isums.notificationservice.infrastructures.repositories.ManagerNotific
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -42,7 +41,7 @@ public class NotificationTranslationResultListener {
     @KafkaListener(topics = NotificationTranslationRequester.CALLBACK_TOPIC,
             groupId = "notification-translation-result")
     @Transactional
-    public void onResult(String payload, Acknowledgment ack) {
+    public void onResult(String payload) {
         try {
             TextTranslationResultEvent event = objectMapper.readValue(payload, TextTranslationResultEvent.class);
             if (!TextTranslationResultEvent.STATUS_DONE.equals(event.status())
@@ -50,14 +49,11 @@ public class NotificationTranslationResultListener {
                     || event.translatedText().isBlank()) {
                 log.debug("Skipping non-DONE translation result requestId={} status={}",
                         event.requestId(), event.status());
-                ack.acknowledge();
                 return;
             }
             apply(event);
-            ack.acknowledge();
         } catch (Exception ex) {
             log.error("Failed to apply translation result, payload={}", payload, ex);
-            ack.acknowledge(); // do not retry on parse errors
         }
     }
 

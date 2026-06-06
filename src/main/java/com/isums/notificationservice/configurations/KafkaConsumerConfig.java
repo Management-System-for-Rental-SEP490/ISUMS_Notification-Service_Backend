@@ -43,8 +43,8 @@ public class KafkaConsumerConfig {
 
     @Bean
     public KafkaTemplate<String, String> dltKafkaTemplate() {
-        // All upstream consumers use StringDeserializer so ConsumerRecord.value()
-        // arrives as String. The DLT producer previously used ByteArraySerializer
+        // All upstream consumers use StringDeserializer so listener payloads
+        // arrive as String. The DLT producer previously used ByteArraySerializer
         // which choked with a ClassCastException (String → byte[]) whenever
         // DeadLetterPublishingRecoverer tried to republish — causing the record
         // to loop on retry instead of landing in the DLT. StringSerializer mirrors

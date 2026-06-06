@@ -7,15 +7,13 @@ import com.isums.notificationservice.domains.enums.AlertEventType;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
+import com.isums.notificationservice.infrastructures.kafka.KafkaPayloadFingerprint;
 import com.isums.notificationservice.services.NotificationDispatchService;
 import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -37,7 +35,6 @@ public class UtilityAlertEventListener {
     private final EmailService emailService;
     private final UserGrpcClient userGrpcClient;
     private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
     private final ObjectMapper objectMapper;
     private final NotificationDispatchService dispatchService;
 
@@ -46,19 +43,17 @@ public class UtilityAlertEventListener {
             .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
 
     @KafkaListener(topics = "utility.consumption.alert", groupId = "notification-group")
-    public void onThresholdExceeded(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+    public void onThresholdExceeded(String payload) {
+        String messageId = KafkaPayloadFingerprint.of("utility.consumption.alert", payload);
 
         try {
             if (idempotencyService.isDuplicate(messageId)) {
                 log.warn("[UtilityAlert] duplicate skipped messageId={}", messageId);
-                ack.acknowledge();
                 return;
             }
 
             UtilityThresholdExceededEvent event =
-                    objectMapper.readValue(record.value(), UtilityThresholdExceededEvent.class);
+                    objectMapper.readValue(payload, UtilityThresholdExceededEvent.class);
 
             if (hasText(event.getTenantUserId())) {
                 dispatchTenantAlert(event, event.getTenantUserId());
@@ -73,7 +68,6 @@ public class UtilityAlertEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
 
             log.info("[UtilityAlert] processed messageId={} house={} metric={} {}→{} tenantUserId={}",
                     messageId, event.getHouseName(), event.getMetric(),
@@ -81,13 +75,10 @@ public class UtilityAlertEventListener {
 
         } catch (JacksonException e) {
             log.error("[UtilityAlert] deserialize failed messageId={}: {}", messageId, e.getMessage());
-            ack.acknowledge();
         } catch (Exception e) {
             log.error("[UtilityAlert] processing failed messageId={}, will retry: {}",
                     messageId, e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 

@@ -68,8 +68,7 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends CONTRACT_EXPIRED notification on happy path")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             UUID houseId = UUID.randomUUID();
             UUID managerId = UUID.randomUUID();
             UUID landlordId = UUID.randomUUID();
@@ -79,38 +78,33 @@ class ContractEventListenerTest {
             when(recipientResolver.resolveLandlordAndManager(houseId, managerId))
                     .thenReturn(List.of(landlordId, managerId));
 
-            listener.handleInspectionScheduled(rec, ack);
+            listener.handleInspectionScheduled("v");
 
             ArgumentCaptor<NotificationCategory> cap = ArgumentCaptor.forClass(NotificationCategory.class);
             verify(notificationService, times(2)).send(any(UUID.class), cap.capture(),
                     anyString(), anyString(), anyString(), anyString(), any(Map.class));
             assertThat(cap.getAllValues()).containsOnly(NotificationCategory.CONTRACT_EXPIRED);
-            verify(ack).acknowledge();
         }
 
         @Test
         @DisplayName("skips-and-acks when duplicate")
         void duplicate() {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(true);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(true);
 
-            listener.handleInspectionScheduled(rec, ack);
+            listener.handleInspectionScheduled("v");
 
-            verify(ack).acknowledge();
             verifyNoInteractions(notificationService);
         }
 
         @Test
         @DisplayName("rethrows for retry on failure")
         void retry() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             when(objectMapper.readValue(any(String.class), eq(InspectionScheduledEvent.class)))
                     .thenThrow(new RuntimeException("bad"));
 
-            assertThatThrownBy(() -> listener.handleInspectionScheduled(rec, ack))
+            assertThatThrownBy(() -> listener.handleInspectionScheduled("v"))
                     .isInstanceOf(RuntimeException.class);
-            verify(ack, never()).acknowledge();
         }
     }
 
@@ -124,18 +118,16 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends INSPECTION_DONE notification on happy path")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             InspectionDoneNotifyEvent event = new InspectionDoneNotifyEvent(
                     UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 100_000L, "m1");
             when(objectMapper.readValue("v", InspectionDoneNotifyEvent.class)).thenReturn(event);
 
-            listener.handleInspectionDone(rec, ack);
+            listener.handleInspectionDone("v");
 
             verify(notificationService).send(eq(event.getManagerId()),
                     eq(NotificationCategory.INSPECTION_DONE),
                     anyString(), anyString(), anyString(), anyString(), any(Map.class));
-            verify(ack).acknowledge();
         }
     }
 
@@ -149,8 +141,7 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends realtime and email to landlord and manager on happy path")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
 
             UUID houseId = UUID.randomUUID();
             UUID createdBy = UUID.randomUUID();
@@ -166,7 +157,7 @@ class ContractEventListenerTest {
             when(userGrpcClient.getUserById(managerId)).thenReturn(user("manager@example.com", "Manager"));
             when(userGrpcClient.getUserById(createdBy)).thenReturn(user("creator@example.com", "Creator"));
 
-            listener.handleReadyForLandlordSignature(rec, ack);
+            listener.handleReadyForLandlordSignature("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService, times(3)).send(
@@ -189,7 +180,6 @@ class ContractEventListenerTest {
                     eq("econtract_ready_for_landlord_signature"),
                     eq(LocaleType.vi_VN),
                     any(Map.class));
-            verify(ack).acknowledge();
         }
     }
 
@@ -210,8 +200,7 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends CONTRACT_COMPLETED notification on happy path")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
 
             UUID contractId = UUID.randomUUID();
             UUID tenantId = UUID.randomUUID();
@@ -239,7 +228,7 @@ class ContractEventListenerTest {
             when(recipientResolver.resolveLandlordAndManager(houseId, landlordId))
                     .thenReturn(List.of(landlordId, managerId));
 
-            listener.handleContractCompleted(rec, ack);
+            listener.handleContractCompleted("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService, times(2)).send(
@@ -258,7 +247,6 @@ class ContractEventListenerTest {
                     .containsEntry("status", "COMPLETED")
                     .containsEntry("completedAt", completedAt.toString())
                     .containsEntry("signedPdfUrl", "https://signed-pdf");
-            verify(ack).acknowledge();
         }
     }
 
@@ -272,8 +260,7 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends DEPOSIT_REFUND_CONFIRM notification to landlord and manager")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
 
             UUID contractId = UUID.randomUUID();
             UUID houseId = UUID.randomUUID();
@@ -292,7 +279,7 @@ class ContractEventListenerTest {
             when(recipientResolver.resolveLandlordAndManager(houseId))
                     .thenReturn(List.of(landlordId, managerId));
 
-            listener.handleDepositRefundConfirmed(rec, ack);
+            listener.handleDepositRefundConfirmed("v");
 
             verify(notificationService, times(2)).send(
                     any(UUID.class),
@@ -303,7 +290,6 @@ class ContractEventListenerTest {
                     eq("/contracts/" + contractId + "/deposit-refund"),
                     any(Map.class)
             );
-            verify(ack).acknowledge();
         }
     }
 
@@ -317,8 +303,7 @@ class ContractEventListenerTest {
         @Test
         @DisplayName("sends CONTRACT_CANCELLED_BY_TENANT notification to landlord and manager")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
 
             UUID contractId = UUID.randomUUID();
             UUID houseId = UUID.randomUUID();
@@ -343,7 +328,7 @@ class ContractEventListenerTest {
             when(recipientResolver.resolveLandlordAndManager(houseId, initiatorId))
                     .thenReturn(List.of(landlordId, managerId));
 
-            listener.handleContractCancelledByTenant(rec, ack);
+            listener.handleContractCancelledByTenant("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService, times(2)).send(
@@ -362,7 +347,6 @@ class ContractEventListenerTest {
                     .containsEntry("status", "CANCELLED_BY_TENANT")
                     .containsEntry("cancelledAt", cancelledAt.toString())
                     .containsEntry("reason", "Khong ky nua");
-            verify(ack).acknowledge();
         }
     }
 }

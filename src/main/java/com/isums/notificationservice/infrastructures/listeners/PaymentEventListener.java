@@ -6,16 +6,14 @@ import com.isums.notificationservice.domains.events.SendEmailEvent;
 import com.isums.notificationservice.domains.enums.LocaleType;
 import com.isums.notificationservice.infrastructures.abstracts.EmailService;
 import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
+import com.isums.notificationservice.infrastructures.kafka.KafkaPayloadFingerprint;
 import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +33,6 @@ public class PaymentEventListener {
     private final EmailService emailService;
     private final UserGrpcClient userGrpcClient;
     private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
     private final ObjectMapper objectMapper;
 
     private static final DateTimeFormatter DMY = DateTimeFormatter
@@ -117,18 +114,16 @@ public class PaymentEventListener {
     }
 
     @KafkaListener(topics = "deposit-refund-paid-topic", groupId = "notification-group")
-    public void handleDepositRefundPaid(ConsumerRecord<String, String> record, Acknowledgment ack) {
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+    public void handleDepositRefundPaid(String payload) {
+        String messageId = KafkaPayloadFingerprint.of("deposit-refund-paid-topic", payload);
 
         try {
             if (idempotencyService.isDuplicate(messageId)) {
                 log.warn("[Payment] Duplicate refund-paid skipped messageId={}", messageId);
-                ack.acknowledge();
                 return;
             }
 
-            DepositRefundPaidEvent event = objectMapper.readValue(record.value(), DepositRefundPaidEvent.class);
+            DepositRefundPaidEvent event = objectMapper.readValue(payload, DepositRefundPaidEvent.class);
 
             String recipientEmail = safe(event.getTenantEmail(), null);
             String tenantName = "you";
@@ -144,7 +139,6 @@ public class PaymentEventListener {
                 log.error("[Payment] Deposit refund paid email skipped, recipient unavailable tenantId={} contractId={}",
                         event.getTenantId(), event.getContractId());
                 idempotencyService.markProcessed(messageId);
-                ack.acknowledge();
                 return;
             }
 
@@ -159,19 +153,15 @@ public class PaymentEventListener {
             emailService.sendEmail(recipientEmail, "deposit_refund_paid_notify", LocaleType.vi_VN, vars);
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
 
             log.info("[Payment] Deposit refund paid email sent messageId={} to={} contractId={}",
                     messageId, recipientEmail, event.getContractId());
         } catch (JacksonException e) {
             log.error("[Payment] Deposit refund paid deserialize failed messageId={}: {}", messageId, e.getMessage());
-            ack.acknowledge();
         } catch (Exception e) {
             log.error("[Payment] Deposit refund paid processing failed messageId={}, will retry: {}",
                     messageId, e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 

@@ -59,8 +59,7 @@ class PaymentConsumerTest {
         @Test
         @DisplayName("sends power_cut_warning_24h email")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             PowerCutConfirmedEvent event = new PowerCutConfirmedEvent(
                     UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                     UUID.randomUUID(), Instant.now().plusSeconds(86400), "m1");
@@ -69,36 +68,31 @@ class PaymentConsumerTest {
                     .setId(event.getTenantId().toString()).setEmail("a@b.com").build();
             when(userGrpcClient.getUserById(event.getTenantId())).thenReturn(tenant);
 
-            consumer.handlePowerCutConfirmed(rec, ack);
+            consumer.handlePowerCutConfirmed("v");
 
             verify(emailService).sendEmail(eq("a@b.com"), eq("power_cut_warning_24h"),
                     eq(LocaleType.vi_VN), any(Map.class));
-            verify(ack).acknowledge();
         }
 
         @Test
         @DisplayName("skips when duplicate")
         void duplicate() {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(true);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(true);
 
-            consumer.handlePowerCutConfirmed(rec, ack);
+            consumer.handlePowerCutConfirmed("v");
 
-            verify(ack).acknowledge();
             verifyNoInteractions(emailService);
         }
 
         @Test
         @DisplayName("rethrows for retry on failure")
         void retry() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             when(objectMapper.readValue(any(String.class), eq(PowerCutConfirmedEvent.class)))
                     .thenThrow(new RuntimeException("bad"));
 
-            assertThatThrownBy(() -> consumer.handlePowerCutConfirmed(rec, ack))
+            assertThatThrownBy(() -> consumer.handlePowerCutConfirmed("v"))
                     .isInstanceOf(RuntimeException.class);
-            verify(ack, never()).acknowledge();
         }
     }
 
@@ -112,20 +106,18 @@ class PaymentConsumerTest {
         @Test
         @DisplayName("sends manager PAYMENT_OVERDUE notification")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             PowerCutReviewRequestedEvent event = PowerCutReviewRequestedEvent.builder()
                     .contractId(UUID.randomUUID()).houseId(UUID.randomUUID())
                     .managerId(UUID.randomUUID()).tenantName("Alice")
                     .daysLate(15).totalAmount(5_000_000L).messageId("m1").build();
             when(objectMapper.readValue("v", PowerCutReviewRequestedEvent.class)).thenReturn(event);
 
-            consumer.handlePowerCutReviewRequested(rec, ack);
+            consumer.handlePowerCutReviewRequested("v");
 
             verify(notificationService).send(eq(event.getManagerId()),
                     eq(NotificationCategory.PAYMENT_OVERDUE),
                     anyString(), anyString(), anyString(), any(Map.class));
-            verify(ack).acknowledge();
         }
     }
 
@@ -139,18 +131,16 @@ class PaymentConsumerTest {
         @Test
         @DisplayName("sends manager PAYMENT_OVERDUE notification")
         void happy() throws Exception {
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(anyString())).thenReturn(false);
             OverdueTerminationRequestedEvent event = new OverdueTerminationRequestedEvent(
                     UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "Bob", "m1");
             when(objectMapper.readValue("v", OverdueTerminationRequestedEvent.class)).thenReturn(event);
 
-            consumer.handleOverdueTerminationRequested(rec, ack);
+            consumer.handleOverdueTerminationRequested("v");
 
             verify(notificationService).send(eq(event.getManagerId()),
                     eq(NotificationCategory.PAYMENT_OVERDUE),
                     anyString(), anyString(), anyString(), any(Map.class));
-            verify(ack).acknowledge();
         }
     }
 }

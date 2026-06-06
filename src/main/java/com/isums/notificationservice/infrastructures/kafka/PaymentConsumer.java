@@ -11,12 +11,9 @@ import com.isums.notificationservice.infrastructures.abstracts.ManagerNotificati
 import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
@@ -35,7 +32,6 @@ public class PaymentConsumer {
     private final UserGrpcClient userGrpcClient;
     private final EmailService emailService;
     private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
     private final ObjectMapper objectMapper;
 
     private static final ZoneId VN = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -43,19 +39,16 @@ public class PaymentConsumer {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(VN);
 
     @KafkaListener(topics = "contract.power-cut-confirmed", groupId = "notification-group")
-    public void handlePowerCutConfirmed(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handlePowerCutConfirmed(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+        String messageId = KafkaPayloadFingerprint.of("contract.power-cut-confirmed", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             PowerCutConfirmedEvent event = objectMapper.readValue(
-                    record.value(), PowerCutConfirmedEvent.class);
+                    payload, PowerCutConfirmedEvent.class);
 
             UserResponse tenant = userGrpcClient.getUserById(event.getTenantId());
 
@@ -67,31 +60,25 @@ public class PaymentConsumer {
             );
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] PowerCutWarning24h sent tenantId={}", event.getTenantId());
         } catch (Exception e) {
             log.error("[Notification] handlePowerCutConfirmed failed: {}", e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 
     @KafkaListener(topics = "contract.power-cut-review-requested",
             groupId = "notification-group")
-    public void handlePowerCutReviewRequested(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handlePowerCutReviewRequested(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+        String messageId = KafkaPayloadFingerprint.of("contract.power-cut-review-requested", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             PowerCutReviewRequestedEvent event = objectMapper.readValue(
-                    record.value(), PowerCutReviewRequestedEvent.class);
+                    payload, PowerCutReviewRequestedEvent.class);
 
             notificationService.send(event.getManagerId(), NotificationCategory.PAYMENT_OVERDUE,
                     "Tenant " + event.getTenantName()
@@ -106,31 +93,25 @@ public class PaymentConsumer {
             );
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] PowerCutReview notified managerId={}", event.getManagerId());
         } catch (Exception e) {
             log.error("[Notification] handlePowerCutReviewRequested failed: {}", e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 
     @KafkaListener(topics = "contract.termination-overdue-requested",
             groupId = "notification-group")
-    public void handleOverdueTerminationRequested(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleOverdueTerminationRequested(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
-        kafkaHelper.setupMDC(record, messageId);
+        String messageId = KafkaPayloadFingerprint.of("contract.termination-overdue-requested", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             OverdueTerminationRequestedEvent event = objectMapper.readValue(
-                    record.value(), OverdueTerminationRequestedEvent.class);
+                    payload, OverdueTerminationRequestedEvent.class);
 
             notificationService.send(event.getManagerId(), NotificationCategory.PAYMENT_OVERDUE,
                     "Tenant " + event.getTenantName() + " rent overdue 30 days",
@@ -140,13 +121,10 @@ public class PaymentConsumer {
             );
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] OverdueTermination notified managerId={}", event.getManagerId());
         } catch (Exception e) {
             log.error("[Notification] handleOverdueTerminationRequested failed: {}", e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            kafkaHelper.clearMDC();
         }
     }
 

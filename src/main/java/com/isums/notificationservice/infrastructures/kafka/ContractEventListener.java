@@ -14,14 +14,11 @@ import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.notificationservice.services.NotificationRecipientResolver;
 import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
@@ -41,22 +38,19 @@ public class ContractEventListener {
     private final NotificationRecipientResolver recipientResolver;
     private final ObjectMapper objectMapper;
     private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
 
     @KafkaListener(topics = "contract.inspection.scheduled",
             groupId = "notification-group")
-    public void handleInspectionScheduled(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleInspectionScheduled(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract.inspection.scheduled", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             InspectionScheduledEvent event = objectMapper.readValue(
-                    record.value(), InspectionScheduledEvent.class);
+                    payload, InspectionScheduledEvent.class);
 
             Map<String, String> metadata = new HashMap<>();
             metadata.put("contractId", event.getContractId().toString());
@@ -83,7 +77,6 @@ public class ContractEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleInspectionScheduled done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleInspectionScheduled failed: {}", e.getMessage(), e);
@@ -93,17 +86,15 @@ public class ContractEventListener {
 
     @KafkaListener(topics = "contract.inspection.done",
             groupId = "notification-group")
-    public void handleInspectionDone(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleInspectionDone(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract.inspection.done", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
-            InspectionDoneNotifyEvent event = objectMapper.readValue(record.value(), InspectionDoneNotifyEvent.class);
+            InspectionDoneNotifyEvent event = objectMapper.readValue(payload, InspectionDoneNotifyEvent.class);
 
             notificationService.send(event.getManagerId(), NotificationCategory.INSPECTION_DONE,
                     "Đã kiểm tra nhà xong — chờ xác nhận hoàn cọc",
@@ -120,7 +111,6 @@ public class ContractEventListener {
             );
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleInspectionDone done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleInspectionDone failed: {}", e.getMessage(), e);
@@ -130,18 +120,16 @@ public class ContractEventListener {
 
     @KafkaListener(topics = "contract.ready-for-landlord-signature",
             groupId = "notification-group")
-    public void handleReadyForLandlordSignature(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleReadyForLandlordSignature(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract.ready-for-landlord-signature", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             ContractReadyForLandlordSignatureEvent event = objectMapper.readValue(
-                    record.value(), ContractReadyForLandlordSignatureEvent.class);
+                    payload, ContractReadyForLandlordSignatureEvent.class);
 
             String contractLabel = event.getContractName() != null && !event.getContractName().isBlank()
                     ? event.getContractName()
@@ -188,7 +176,6 @@ public class ContractEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleReadyForLandlordSignature done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleReadyForLandlordSignature failed: {}", e.getMessage(), e);
@@ -198,18 +185,16 @@ public class ContractEventListener {
 
     @KafkaListener(topics = "contract.deposit-refund.confirmed",
             groupId = "notification-group")
-    public void handleDepositRefundConfirmed(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleDepositRefundConfirmed(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract.deposit-refund.confirmed", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             DepositRefundConfirmedEvent event = objectMapper.readValue(
-                    record.value(), DepositRefundConfirmedEvent.class);
+                    payload, DepositRefundConfirmedEvent.class);
 
             Map<String, String> metadata = new HashMap<>();
             metadata.put("contractId", event.getContractId().toString());
@@ -237,7 +222,6 @@ public class ContractEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleDepositRefundConfirmed done messageId={} recipients={}",
                     messageId, recipientIds.size());
         } catch (Exception e) {
@@ -284,18 +268,16 @@ public class ContractEventListener {
 
     @KafkaListener(topics = "contract-completed-topic",
             groupId = "notification-group")
-    public void handleContractCompleted(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleContractCompleted(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract-completed-topic", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             ContractCompletedEvent event = objectMapper.readValue(
-                    record.value(), ContractCompletedEvent.class);
+                    payload, ContractCompletedEvent.class);
 
             String contractLabel = "#" + event.getContractId().toString().substring(0, 8).toUpperCase();
             String tenantLabel = event.getTenantEmail() != null && !event.getTenantEmail().isBlank()
@@ -333,7 +315,6 @@ public class ContractEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleContractCompleted done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleContractCompleted failed: {}", e.getMessage(), e);
@@ -343,18 +324,16 @@ public class ContractEventListener {
 
     @KafkaListener(topics = "contract.cancelled-by-tenant",
             groupId = "notification-group")
-    public void handleContractCancelledByTenant(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleContractCancelledByTenant(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("contract.cancelled-by-tenant", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             ContractCancelledByTenantEvent event = objectMapper.readValue(
-                    record.value(), ContractCancelledByTenantEvent.class);
+                    payload, ContractCancelledByTenantEvent.class);
 
             String tenantLabel = event.getTenantName() != null && !event.getTenantName().isBlank()
                     ? event.getTenantName()
@@ -392,7 +371,6 @@ public class ContractEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleContractCancelledByTenant done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleContractCancelledByTenant failed: {}", e.getMessage(), e);

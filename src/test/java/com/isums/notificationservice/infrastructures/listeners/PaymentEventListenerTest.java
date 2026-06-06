@@ -114,10 +114,7 @@ class PaymentEventListenerTest {
     @Test
     @DisplayName("sends deposit_refund_paid_notify email when refund is marked paid")
     void depositRefundPaid() throws Exception {
-        ConsumerRecord<String, String> refundRec =
-                new ConsumerRecord<>("deposit-refund-paid-topic", 0, 0L, "k", "v");
-        when(kafkaHelper.extractMessageId(refundRec)).thenReturn("m2");
-        when(idempotencyService.isDuplicate("m2")).thenReturn(false);
+        when(idempotencyService.isDuplicate(any(String.class))).thenReturn(false);
         DepositRefundPaidEvent evt = DepositRefundPaidEvent.builder()
                 .contractId(UUID.randomUUID())
                 .tenantId(UUID.randomUUID())
@@ -130,10 +127,9 @@ class PaymentEventListenerTest {
                 .build();
         when(objectMapper.readValue("v", DepositRefundPaidEvent.class)).thenReturn(evt);
 
-        listener.handleDepositRefundPaid(refundRec, ack);
+        listener.handleDepositRefundPaid("v");
 
         verify(emailService).sendEmail(eq("alice@example.com"), eq("deposit_refund_paid_notify"),
                 eq(LocaleType.vi_VN), any());
-        verify(ack).acknowledge();
     }
 }

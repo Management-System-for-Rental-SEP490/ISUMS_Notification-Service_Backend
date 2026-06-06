@@ -64,8 +64,7 @@ class IssueNotificationEventListenerTest {
             UUID landlordId = UUID.randomUUID();
             UUID managerId = UUID.randomUUID();
 
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(any(String.class))).thenReturn(false);
             when(recipientResolver.resolveLandlordAndManager(houseId, staffId))
                     .thenReturn(List.of(landlordId, managerId));
             when(userGrpcClient.getUserById(staffId)).thenReturn(
@@ -75,7 +74,7 @@ class IssueNotificationEventListenerTest {
                     issueId, null, houseId, slotId, staffId, "ISSUE", null, null, "JOB_ASSIGNED");
             when(objectMapper.readValue("v", IssueWorkSlotAssignedEvent.class)).thenReturn(event);
 
-            listener.handleIssueWorkSlotAssigned(rec, ack);
+            listener.handleIssueWorkSlotAssigned("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService, times(2)).send(
@@ -91,7 +90,6 @@ class IssueNotificationEventListenerTest {
                     .containsEntry("slotId", slotId.toString())
                     .containsEntry("staffId", staffId.toString())
                     .containsEntry("status", "SCHEDULED");
-            verify(ack).acknowledge();
         }
     }
 
@@ -109,8 +107,7 @@ class IssueNotificationEventListenerTest {
             UUID houseId = UUID.randomUUID();
             UUID tenantId = UUID.randomUUID();
 
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(any(String.class))).thenReturn(false);
             when(userGrpcClient.getUserById(tenantId)).thenReturn(
                     UserResponse.newBuilder().setId(tenantId.toString()).setName("Tenant A").build());
 
@@ -118,7 +115,7 @@ class IssueNotificationEventListenerTest {
                     issueId, tenantId, houseId, null, null, "ISSUE", null, null, "JOB_CREATED");
             when(objectMapper.readValue("v", IssueWorkSlotAssignedEvent.class)).thenReturn(event);
 
-            listener.handleIssueCreated(rec, ack);
+            listener.handleIssueCreated("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService).send(
@@ -133,7 +130,6 @@ class IssueNotificationEventListenerTest {
                     .containsEntry("houseId", houseId.toString())
                     .containsEntry("tenantId", tenantId.toString())
                     .containsEntry("status", "CREATED");
-            verify(ack).acknowledge();
         }
 
         @Test
@@ -175,8 +171,7 @@ class IssueNotificationEventListenerTest {
             UUID landlordId = UUID.randomUUID();
             UUID managerId = UUID.randomUUID();
 
-            when(kafkaHelper.extractMessageId(rec)).thenReturn("m1");
-            when(idempotencyService.isDuplicate("m1")).thenReturn(false);
+            when(idempotencyService.isDuplicate(any(String.class))).thenReturn(false);
             when(recipientResolver.resolveLandlordAndManager(houseId))
                     .thenReturn(List.of(landlordId, managerId));
             when(userGrpcClient.getUserById(staffId)).thenReturn(
@@ -186,7 +181,7 @@ class IssueNotificationEventListenerTest {
                     "m1", issueId, quoteId, houseId, staffId, BigDecimal.valueOf(550_000), null);
             when(objectMapper.readValue("v", IssueQuoteSubmittedEvent.class)).thenReturn(event);
 
-            listener.handleIssueQuoteSubmitted(rec, ack);
+            listener.handleIssueQuoteSubmitted("v");
 
             ArgumentCaptor<Map> metadataCap = ArgumentCaptor.forClass(Map.class);
             verify(notificationService, times(2)).send(
@@ -203,7 +198,6 @@ class IssueNotificationEventListenerTest {
                     .containsEntry("staffId", staffId.toString())
                     .containsEntry("status", "WAITING_MANAGER_APPROVAL_QUOTE")
                     .containsEntry("totalPrice", "550000");
-            verify(ack).acknowledge();
         }
     }
 }

@@ -8,12 +8,9 @@ import com.isums.notificationservice.infrastructures.grpcs.UserGrpcClient;
 import com.isums.notificationservice.services.NotificationRecipientResolver;
 import com.isums.userservice.grpc.UserResponse;
 import common.kafkas.IdempotencyService;
-import common.kafkas.KafkaListenerHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
@@ -32,25 +29,21 @@ public class IssueNotificationEventListener {
     private final UserGrpcClient userGrpcClient;
     private final ObjectMapper objectMapper;
     private final IdempotencyService idempotencyService;
-    private final KafkaListenerHelper kafkaHelper;
 
     @KafkaListener(topics = "job.assigned", groupId = "notification-group")
-    public void handleIssueWorkSlotAssigned(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleIssueWorkSlotAssigned(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("job.assigned", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             IssueWorkSlotAssignedEvent event = objectMapper.readValue(
-                    record.value(), IssueWorkSlotAssignedEvent.class);
+                    payload, IssueWorkSlotAssignedEvent.class);
 
             if (!"ISSUE".equalsIgnoreCase(event.getReferenceType())
                     || !"JOB_ASSIGNED".equalsIgnoreCase(event.getAction())) {
-                ack.acknowledge();
                 return;
             }
 
@@ -79,7 +72,6 @@ public class IssueNotificationEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleIssueWorkSlotAssigned done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleIssueWorkSlotAssigned failed: {}", e.getMessage(), e);
@@ -88,24 +80,21 @@ public class IssueNotificationEventListener {
     }
 
     @KafkaListener(topics = "job.created", groupId = "notification-group")
-    public void handleIssueCreated(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleIssueCreated(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("job.created", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             IssueWorkSlotAssignedEvent event = objectMapper.readValue(
-                    record.value(), IssueWorkSlotAssignedEvent.class);
+                    payload, IssueWorkSlotAssignedEvent.class);
 
             if (!"ISSUE".equalsIgnoreCase(event.getReferenceType())
                     || !"JOB_CREATED".equalsIgnoreCase(event.getAction())
                     || event.getTenantId() == null
                     || event.getReferenceId() == null) {
-                ack.acknowledge();
                 return;
             }
 
@@ -127,7 +116,6 @@ public class IssueNotificationEventListener {
             );
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleIssueCreated done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleIssueCreated failed: {}", e.getMessage(), e);
@@ -136,18 +124,16 @@ public class IssueNotificationEventListener {
     }
 
     @KafkaListener(topics = "issue.quote.submitted", groupId = "notification-group")
-    public void handleIssueQuoteSubmitted(
-            ConsumerRecord<String, String> record, Acknowledgment ack) {
+    public void handleIssueQuoteSubmitted(String payload) {
 
-        String messageId = kafkaHelper.extractMessageId(record);
+        String messageId = KafkaPayloadFingerprint.of("issue.quote.submitted", payload);
         try {
             if (idempotencyService.isDuplicate(messageId)) {
-                ack.acknowledge();
                 return;
             }
 
             IssueQuoteSubmittedEvent event = objectMapper.readValue(
-                    record.value(), IssueQuoteSubmittedEvent.class);
+                    payload, IssueQuoteSubmittedEvent.class);
 
             String staffName = resolveUserName(event.getStaffId(), "staff");
             List<UUID> recipientIds = recipientResolver.resolveLandlordAndManager(event.getHouseId());
@@ -177,7 +163,6 @@ public class IssueNotificationEventListener {
             }
 
             idempotencyService.markProcessed(messageId);
-            ack.acknowledge();
             log.info("[Notification] handleIssueQuoteSubmitted done messageId={}", messageId);
         } catch (Exception e) {
             log.error("[Notification] handleIssueQuoteSubmitted failed: {}", e.getMessage(), e);
