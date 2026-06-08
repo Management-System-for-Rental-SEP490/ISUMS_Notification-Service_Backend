@@ -2500,6 +2500,10 @@ public class EmailTemplateSeeder {
                                     <p style="margin-top:18px;color:#667085;font-size:13px;">
                                       Nếu chưa nhận được tiền, vui lòng liên hệ bộ phận quản lý để được kiểm tra giao dịch.
                                     </p>
+                                    <div style="margin-top:18px;padding-top:16px;border-top:1px solid #e5e7eb;color:#15803d;font-size:14px;line-height:1.7;">
+                                      <strong>Cảm ơn bạn đã tin tưởng và đồng hành cùng ISUMS! 🏡</strong><br>
+                                      Cảm ơn bạn đã lựa chọn thuê nhà qua hệ thống của chúng tôi trong suốt thời gian qua. Chúc bạn mọi điều tốt đẹp và rất mong được phục vụ bạn trong tương lai.
+                                    </div>
                                   </td>
                                 </tr>
                               </table>
@@ -2513,6 +2517,8 @@ public class EmailTemplateSeeder {
                         Phương thức: {{paymentMethod}}
                         Thời gian xác nhận: {{paidAt}}
                         Ghi chú: {{note}}
+
+                        Cảm ơn bạn đã tin tưởng và đồng hành cùng ISUMS! Chúc bạn mọi điều tốt đẹp và rất mong được phục vụ bạn trong tương lai.
                         """,
                 List.of("tenantName", "contractId", "refundAmount", "paymentMethod", "paidAt", "note"),
                 "system"
