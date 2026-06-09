@@ -25,6 +25,7 @@ public class EContractEventListener {
     private static final Pattern CONFIRM_URL_PATTERN = Pattern.compile("\"confirmUrl\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern CONTRACT_NAME_PATTERN = Pattern.compile("\"contractName\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern CONTRACT_ID_PATTERN = Pattern.compile("\"contractId\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern CONTRACT_LANGUAGE_PATTERN = Pattern.compile("\"contractLanguage\"\\s*:\\s*\"([^\"]+)\"");
 
     @KafkaListener(topics = "confirmAndSendToTenant-topic", groupId = "notification-group")
     public void handleConfirmAndSendToTenant(String payload) {
@@ -40,6 +41,7 @@ public class EContractEventListener {
             String confirmUrl = extract(payload, CONFIRM_URL_PATTERN);
             String contractName = extract(payload, CONTRACT_NAME_PATTERN);
             String contractId = extract(payload, CONTRACT_ID_PATTERN);
+            String contractLanguage = extract(payload, CONTRACT_LANGUAGE_PATTERN);
 
             log.error("[EContract] >>> PARSED email={} contractId={}", email, contractId);
 
@@ -61,7 +63,7 @@ public class EContractEventListener {
             vars.put("confirmUrl", confirmUrl != null ? confirmUrl : (url != null ? url : "#"));
             vars.put("expiresIn", "24 giờ");
 
-            emailService.sendEmail(email, "econtract_view_confirm", LocaleType.vi_VN, vars);
+            emailService.sendEmail(email, "econtract_view_confirm", mapLocale(contractLanguage), vars);
             log.error("[EContract] >>> EMAIL SENT to={}", email);
         } catch (Throwable t) {
             log.error("[EContract] >>> FAILED: {}", t.toString(), t);
@@ -71,5 +73,14 @@ public class EContractEventListener {
     private String extract(String payload, Pattern p) {
         Matcher m = p.matcher(payload);
         return m.find() ? m.group(1) : null;
+    }
+
+    private LocaleType mapLocale(String contractLanguage) {
+        if (contractLanguage == null) return LocaleType.vi_VN;
+        return switch (contractLanguage) {
+            case "VI_EN" -> LocaleType.en_US;
+            case "VI_JA" -> LocaleType.ja_JP;
+            default -> LocaleType.vi_VN;
+        };
     }
 }
